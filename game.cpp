@@ -30,9 +30,10 @@ void Game::start() {
   }
 
   // set chess pieces
+  pieces_.fill(Q_NULLPTR, 60);
   for (int i = 0; i < 60; i++) {
-    pieces_.push_back(new QWidget(this));
     if (gridType_[i] == TYPE::BINGZHAN) {
+      pieces_[i] = new QWidget(this);
       pieces_[i]->setGeometry(grids_[i]);
       pieces_[i]->setStyleSheet("border-image:url(:/Chess/UN)");
       pieces_[i]->show();
@@ -41,6 +42,12 @@ void Game::start() {
 }
 
 void Game::mousePressEvent(QMouseEvent *event) {
-  for (int i = 0; i < grids_.size(); i++)
-    if (grids_[i].contains(event->pos())) qDebug() << i;
+  for (int i = 0; i < grids_.size(); i++) {
+    if (grids_[i].contains(event->pos())) {
+      // debug
+      qDebug() << "Click on grid" << i;
+
+      return;
+    }
+  }
 }
