@@ -1,6 +1,7 @@
 #pragma once
+#include <vector>
 #include <QWidget>
-#include <QList>
+#include <QLabel>
 #include <QMouseEvent>
 
 class Game : public QWidget {
@@ -10,12 +11,15 @@ public:
 protected:
   void mousePressEvent(QMouseEvent *);
 private:
-  enum class STATUS { EMPTY, UNKNOWN };
-  enum class TYPE { BINGZHAN, XINGYING };
-  QWidget *board_;
-  QList<QRect> grids_;
-  QList<STATUS> gridStatus_;
-  QList<TYPE> gridType_;
-  QList<QWidget *> pieces_;
+  enum STATUS : int;
+  enum TYPE : int;
+  const std::vector<QPixmap> pics;
+  std::vector<QRect> grids;
+  std::vector<STATUS> gridStatus, initStatus;
+  std::vector<TYPE> gridType;
+  QWidget *board;
+  std::vector<QLabel *> pieces;
+  int cache;
   void start();
+  void setStatus(int, STATUS);
 };
