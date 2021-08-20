@@ -1,5 +1,5 @@
-#include <qstyle.h>
 #include <random>
+#include <qstyle.h>
 #include "game.h"
 
 enum Game::STATUS : int {
@@ -19,12 +19,10 @@ enum Game::STATUS : int {
   RM, BM, // Mine
 };
 
-enum Game::TYPE : int { BINGZHAN, XINGYING };
+enum Game::TYPE : int {STATION, CAMP};
 
 Game::Game(QWidget *parent)
     : QWidget(parent),
-      board(Q_NULLPTR),
-      focus(-1),
       pics({
         QPixmap(),
         QPixmap(":/Chess/UN"),
@@ -41,7 +39,20 @@ Game::Game(QWidget *parent)
         QPixmap(":/Chess/RB"), QPixmap(":/Chess/BB"),
         QPixmap(":/Chess/RM"), QPixmap(":/Chess/BM")
       }),
-      attackable({
+      railwayStations({
+         5,  6,  7,  8,  9,
+        10,             14,
+        15,             19,
+        20,             24,
+        25, 26, 27, 28, 29,
+      /* |       |       | */
+        30, 31, 32, 33, 34,
+        35,             39,
+        40,             44,
+        45,             49,
+        50, 51, 52, 53, 54
+      }),
+      attackTable({
         /*     EM UN R1 B1 R2 B2 R3 B3 R4 B4 R5 B5 R6 B6 R7 B7 R8 B8 R9 B9 RF BF RB BB RM BM */
         /*EM*/ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         /*UN*/ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -85,10 +96,10 @@ void Game::start() {
 
   // set grid status and type
   gridStatus.assign(60, UNKNOWN);
-  gridType.assign(60, BINGZHAN);
+  gridType.assign(60, STATION);
   for (int i : {11, 13, 17, 21, 23, 36, 38, 42, 46, 48}) {
     gridStatus[i] = EMPTY;
-    gridType[i] = XINGYING;
+    gridType[i] = CAMP;
   }
 
   // set chess board
@@ -126,7 +137,6 @@ void Game::mousePressEvent(QMouseEvent *event) {
   if (event->button() == Qt::MouseButton::LeftButton)
     for (int i = 0; i < grids.size(); i++)
       if (grids[i].contains(event->pos())) {
-        qDebug() << "Click on grid" << i; // debug
         if (focus == -1) focusOn(i);
         else moveFromTo(focus, i);
         return;
@@ -162,31 +172,74 @@ void Game::focusOff() {
 
 void Game::moveFromTo(int f, int t) {
   focusOff();
+
+  // check moveability
   STATUS fs = gridStatus[f], ts = gridStatus[t];
-  if (f == t || !isReachable(f, t) || !isAttackable(fs, ts)) return;
-  if ((fs ^ ts) == 1 || fs == RB || fs == BB)
+  if (!isReachable(f, t) ||
+      !isAttackable(fs, ts))
+    return;
+
+  // execute
+  if ((fs ^ ts) == 1 ||
+      ts != EMPTY && (
+        fs == RB ||
+        fs == BB)) {
     setStatus(t, EMPTY);
-  else
-    setStatus(t, gridStatus[f]);
+  } else {
+    setStatus(t, fs);
+  }
   setStatus(f, EMPTY);
+
+  // update mine numbers
+  if (ts == RM)
+    numOfRM--;
+  if (ts == BM)
+    numOfBM--;
+}
+
+bool Game::isAdjacent(int a, int b) {
+  int dist = (grids[a].topLeft() - grids[b].topLeft()).manhattanLength();
+  int left = grids[a].left();
+  if (dist == 44 || dist == 94) return true;
+  if (dist == 138 && (gridType[a] == CAMP || gridType[b] == CAMP)) return true;
+  if (dist == 140 && (left == 0 || left == 188 || left == 376)) return true;
+  return false;
 }
 
 bool Game::isReachable(int a, int b) {
-  return true;
+  // coincide
+  if (a == b) return false;
+
+  // protected
+  if (gridType[b] == CAMP && gridStatus[b] != EMPTY) return false;
+
+  // adjacent
+  if (isAdjacent(a, b)) return true;
+
+  // off railway
+  int na = 0, nb = 0;
+  while (na < 32 && a != railwayStations[na]) na++;
+  while (nb < 32 && b != railwayStations[nb]) nb++;
+  if (na == 32 || nb == 32) return false;
+  
+  // Floyd-Warshall
+  std::vector<bool> reachable(32, false);
+  for (int k = 0; k < 32; k++)
+    if (isAdjacent(a, railwayStations[k])) reachable[k] = true;
+  for (int i = 0; i < 32; i++) {
+    if (reachable[nb] == true) return true;
+    for (int j = 0; j < 32; j++)
+      if (reachable[j] && gridStatus[railwayStations[j]] == EMPTY)
+        for (int k = 0; k < 32; k++)
+          if (isAdjacent(railwayStations[j], railwayStations[k])) reachable[k] = true;
+  }
+  return false;
 }
 
 bool Game::isAttackable(STATUS a, STATUS b) {
-  if (b == RF) {
-    int numOfBM = 0;
-    for (STATUS s : gridStatus)
-      if (s == BM) numOfBM++;
-    if (numOfBM) return false;
-  }
-  if (b == BF) {
-    int numOfRM = 0;
-    for (STATUS s : gridStatus)
-      if (s == RM) numOfRM++;
+  if (b == RF)
     if (numOfRM) return false;
-  }
-  return attackable[a][b];
+  if (b == BF)
+    if (numOfBM) return false;
+  return attackTable[a][b];
 }
