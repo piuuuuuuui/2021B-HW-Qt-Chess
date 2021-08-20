@@ -13,21 +13,7 @@
   <property name="windowTitle">
    <string>Chess</string>
   </property>
-  <widget class="QWidget" name="centralWidget">
-   <widget class="QWidget" name="widget" native="true">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>0</y>
-      <width>441</width>
-      <height>614</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">border-image:url(:/Chess/BG)</string>
-    </property>
-   </widget>
-  </widget>
+  <widget class="QWidget" name="centralWidget"/>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>

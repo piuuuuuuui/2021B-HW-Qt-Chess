@@ -94,7 +94,11 @@
     <QtUic Include="chess.ui" />
     <QtMoc Include="chess.h" />
     <ClCompile Include="chess.cpp" />
+    <ClCompile Include="game.cpp" />
     <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="game.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
