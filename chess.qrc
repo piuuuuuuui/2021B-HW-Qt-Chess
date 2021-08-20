@@ -1,6 +1,5 @@
 <RCC>
     <qresource prefix="/Chess">
-        <file alias="BG">Textures/png/chessboard.png</file>
         <file alias="MR">Textures/png/地雷_红.png</file>
         <file alias="MB">Textures/png/地雷_蓝.png</file>
         <file alias="1R">Textures/png/工兵_红.png</file>
@@ -25,5 +24,8 @@
         <file alias="4B">Textures/png/营长_蓝.png</file>
         <file alias="BR">Textures/png/炸弹_红.png</file>
         <file alias="BB">Textures/png/炸弹_蓝.png</file>
+        <file alias="Grids">Textures/png/棋盘2.png</file>
+        <file alias="BG">Textures/png/棋盘背景.jpg</file>
+        <file alias="UN">Textures/png/占位符（未翻的棋子）.png</file>
     </qresource>
 </RCC>
