@@ -1,0 +1,29 @@
+<RCC>
+    <qresource prefix="/Chess">
+        <file alias="BG">Textures/png/chessboard.png</file>
+        <file alias="MR">Textures/png/地雷_红.png</file>
+        <file alias="MB">Textures/png/地雷_蓝.png</file>
+        <file alias="1R">Textures/png/工兵_红.png</file>
+        <file alias="1B">Textures/png/工兵_蓝.png</file>
+        <file alias="0R">Textures/png/军旗_红.png</file>
+        <file alias="0B">Textures/png/军旗_蓝.png</file>
+        <file alias="8R">Textures/png/军长_红.png</file>
+        <file alias="8B">Textures/png/军长_蓝.png</file>
+        <file alias="3R">Textures/png/连长_红.png</file>
+        <file alias="3B">Textures/png/连长_蓝.png</file>
+        <file alias="6R">Textures/png/旅长_红.png</file>
+        <file alias="6B">Textures/png/旅长_蓝.png</file>
+        <file alias="2R">Textures/png/排长_红.png</file>
+        <file alias="2B">Textures/png/排长_蓝.png</file>
+        <file alias="7R">Textures/png/师长_红.png</file>
+        <file alias="7B">Textures/png/师长_蓝.png</file>
+        <file alias="9R">Textures/png/司令_红.png</file>
+        <file alias="9B">Textures/png/司令_蓝.png</file>
+        <file alias="5R">Textures/png/团长_红.png</file>
+        <file alias="5B">Textures/png/团长_蓝.png</file>
+        <file alias="4R">Textures/png/营长_红.png</file>
+        <file alias="4B">Textures/png/营长_蓝.png</file>
+        <file alias="BR">Textures/png/炸弹_红.png</file>
+        <file alias="BB">Textures/png/炸弹_蓝.png</file>
+    </qresource>
+</RCC>
