@@ -24,7 +24,7 @@ enum Game::TYPE : int { BINGZHAN, XINGYING };
 Game::Game(QWidget *parent)
     : QWidget(parent),
       board(Q_NULLPTR),
-      cache(-1),
+      focus(-1),
       pics({
         QPixmap(),
         QPixmap(":/Chess/UN"),
@@ -40,6 +40,35 @@ Game::Game(QWidget *parent)
         QPixmap(":/Chess/RF"), QPixmap(":/Chess/BF"),
         QPixmap(":/Chess/RB"), QPixmap(":/Chess/BB"),
         QPixmap(":/Chess/RM"), QPixmap(":/Chess/BM")
+      }),
+      attackable({
+        /*     EM UN R1 B1 R2 B2 R3 B3 R4 B4 R5 B5 R6 B6 R7 B7 R8 B8 R9 B9 RF BF RB BB RM BM */
+        /*EM*/ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        /*UN*/ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        /*R1*/ {1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1},
+        /*B1*/ {1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0},
+        /*R2*/ {1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+        /*B2*/ {1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0},
+        /*R3*/ {1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+        /*B3*/ {1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0},
+        /*R4*/ {1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+        /*B4*/ {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0},
+        /*R5*/ {1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+        /*B5*/ {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0},
+        /*R6*/ {1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+        /*B6*/ {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0},
+        /*R7*/ {1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+        /*B7*/ {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0},
+        /*R8*/ {1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0},
+        /*B8*/ {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0},
+        /*R9*/ {1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0},
+        /*B9*/ {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0},
+        /*RF*/ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        /*BF*/ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        /*RB*/ {1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1},
+        /*BB*/ {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0},
+        /*RM*/ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        /*BM*/ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
       }) {
   setStyleSheet("border-image:url(:/Chess/Background)");
   start();
@@ -94,25 +123,15 @@ void Game::start() {
 }
 
 void Game::mousePressEvent(QMouseEvent *event) {
-  for (int i = 0; i < grids.size(); i++) {
-    if (grids[i].contains(event->pos())) {
-      // debug
-      qDebug() << "Click on grid" << i;
-      if (cache == -1) {
-        if (gridStatus[i] == EMPTY)
-          return;
-        if (gridStatus[i] == UNKNOWN)
-          setStatus(i, initStatus[i]);
-        else
-          cache = i;
-      } else {
-        setStatus(i, gridStatus[cache]);
-        setStatus(cache, EMPTY);
-        cache = -1;
+  if (event->button() == Qt::MouseButton::LeftButton)
+    for (int i = 0; i < grids.size(); i++)
+      if (grids[i].contains(event->pos())) {
+        qDebug() << "Click on grid" << i; // debug
+        if (focus == -1) focusOn(i);
+        else moveFromTo(focus, i);
+        return;
       }
-      return;
-    }
-  }
+  focusOff();
 }
 
 void Game::setStatus(int i, STATUS s) {
@@ -123,4 +142,51 @@ void Game::setStatus(int i, STATUS s) {
     pieces[i]->setPixmap(pics[s]);
     pieces[i]->show();
   }
+}
+
+void Game::focusOn(int f) {
+  if (gridStatus[f] == EMPTY) return;
+  if (gridStatus[f] == UNKNOWN) {
+    setStatus(f, initStatus[f]);
+    return;
+  }
+  focus = f;
+  pieces[focus]->setEnabled(false);
+}
+
+void Game::focusOff() {
+  if (focus == -1) return;
+  pieces[focus]->setEnabled(true);
+  focus = -1;
+}
+
+void Game::moveFromTo(int f, int t) {
+  focusOff();
+  STATUS fs = gridStatus[f], ts = gridStatus[t];
+  if (f == t || !isReachable(f, t) || !isAttackable(fs, ts)) return;
+  if ((fs ^ ts) == 1 || fs == RB || fs == BB)
+    setStatus(t, EMPTY);
+  else
+    setStatus(t, gridStatus[f]);
+  setStatus(f, EMPTY);
+}
+
+bool Game::isReachable(int a, int b) {
+  return true;
+}
+
+bool Game::isAttackable(STATUS a, STATUS b) {
+  if (b == RF) {
+    int numOfBM = 0;
+    for (STATUS s : gridStatus)
+      if (s == BM) numOfBM++;
+    if (numOfBM) return false;
+  }
+  if (b == BF) {
+    int numOfRM = 0;
+    for (STATUS s : gridStatus)
+      if (s == RM) numOfRM++;
+    if (numOfRM) return false;
+  }
+  return attackable[a][b];
 }
