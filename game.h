@@ -26,7 +26,8 @@ private:
   int focus = -1;
   int numOfRM = 3;
   int numOfBM = 3;
-  void start();
+  void gameStart();
+  void gameOver();
   void setStatus(int, STATUS);
   void focusOn(int);
   void focusOff();

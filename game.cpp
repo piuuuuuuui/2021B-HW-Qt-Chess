@@ -91,10 +91,10 @@ Game::Game(QWidget *parent)
         /*BM*/ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
       }) {
   setStyleSheet("border-image:url(:/Chess/Background)");
-  start();
+  gameStart();
 }
 
-void Game::start() {
+void Game::gameStart() {
   // set grids
   for (int i = 0; i < 6; i++)
     for (int j = 0; j < 5; j++)
@@ -143,6 +143,9 @@ void Game::start() {
   );
   for (int i : {11, 13, 17, 21, 23, 36, 38, 42, 46, 48})
     initStatus.insert(initStatus.begin() + i, EMPTY);
+}
+
+void Game::gameOver() {
 }
 
 void Game::mousePressEvent(QMouseEvent *event) {
@@ -204,15 +207,10 @@ void Game::moveFromTo(int f, int t) {
   }
   setStatus(f, EMPTY);
 
-  // update mine numbers
-  if (ts == RM)
-    numOfRM--;
-  if (ts == BM)
-    numOfBM--;
-
-  // winning check
-  if (ts == RF || ts == BF)
-    setEnabled(false);
+  // post-check
+  if (ts == RM) numOfRM--;
+  if (ts == BM) numOfBM--;
+  if (ts == RF || ts == BF) gameOver();
 }
 
 bool Game::isAdjacent(int a, int b) {
