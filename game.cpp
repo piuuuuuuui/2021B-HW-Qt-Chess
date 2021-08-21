@@ -52,6 +52,7 @@ Game::Game(QWidget *parent)
         45,             49,
         50, 51, 52, 53, 54
       }),
+      camps({11, 13, 17, 21, 23, 36, 38, 42, 46, 48}),
       railways({
         {5, 6, 7, 8, 9},
         {25, 26, 27, 28, 29},
@@ -91,34 +92,67 @@ Game::Game(QWidget *parent)
         /*BM*/ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
       }) {
   setStyleSheet("border-image:url(:/Chess/Background)");
+  tr.translate(220, 600);
+  tr.rotate(20, Qt::XAxis);
+  tr.translate(-220, -600);
+  setGrids();
+  setAdjacentTable();
   gameStart();
 }
 
-void Game::gameStart() {
-  // set grids
+void Game::setGrids() {
   for (int i = 0; i < 6; i++)
-    for (int j = 0; j < 5; j++)
-      grids.push_back(QRect(j * 94, i * 44, 65, 31));
+    for (int j = 0; j < 5; j++) {
+      QLine bottom = tr.map(QLine(j * 94 + 5, i * 44 + 27, j * 94 + 32, i * 44 + 27));
+      grids.push_back(QRect(
+        bottom.x1(),
+        bottom.y1() - bottom.dx(),
+        bottom.dx() * 2,
+        bottom.dx()
+      ));
+    }
   for (int i = 0; i < 6; i++)
-    for (int j = 0; j < 5; j++)
-      grids.push_back(QRect(j * 94, i * 44 + 360, 65, 31));
+    for (int j = 0; j < 5; j++) {
+      QLine bottom = tr.map(QLine(j * 94 + 5, i * 44 + 387, j * 94 + 32, i * 44 + 387));
+      grids.push_back(QRect(
+        bottom.x1(),
+        bottom.y1() - bottom.dx(),
+        bottom.dx() * 2,
+        bottom.dx()
+      ));
+    }
+}
 
+void Game::setAdjacentTable() {
+  adjacentTable.resize(60);
+  for (auto &adj : adjacentTable) adj.assign(60, false);
+  for (int i = 0; i < 60; i++) {
+    if (i >= 5) adjacentTable[i][i - 5] = true;     // up
+    if (i < 55) adjacentTable[i][i + 5] = true;     // down
+    if (i % 5 != 0) adjacentTable[i][i - 1] = true; // left
+    if (i % 5 != 4) adjacentTable[i][i + 1] = true; // right
+  }
+  for (int i : camps) {
+    adjacentTable[i][i - 6] = adjacentTable[i - 6][i] =
+    adjacentTable[i][i - 4] = adjacentTable[i - 4][i] =
+    adjacentTable[i][i + 4] = adjacentTable[i + 4][i] =
+    adjacentTable[i][i + 6] = adjacentTable[i + 6][i] = true;
+  }
+  adjacentTable[26][31] = adjacentTable[31][26] =
+  adjacentTable[28][33] = adjacentTable[33][28] = false;
+}
+
+void Game::gameStart() {
   // set grid status and type
   gridStatus.assign(60, UNKNOWN);
   gridType.assign(60, STATION);
   for (int i : railwayStations) {
     gridType[i] = RAILWAY;
   }
-  for (int i : {11, 13, 17, 21, 23, 36, 38, 42, 46, 48}) {
+  for (int i : camps) {
     gridStatus[i] = EMPTY;
     gridType[i] = CAMP;
   }
-
-  // set chess board
-  board = new QWidget(this);
-  board->setGeometry(0, 0, 441, 614);
-  board->setStyleSheet("border-image:url(:/Chess/Grids)");
-  board->show();
 
   // set chess pieces
   pieces.assign(60, Q_NULLPTR);
@@ -141,24 +175,15 @@ void Game::gameStart() {
     initStatus.end(),
     std::default_random_engine((unsigned)(new char))
   );
-  for (int i : {11, 13, 17, 21, 23, 36, 38, 42, 46, 48})
+  for (int i : camps)
     initStatus.insert(initStatus.begin() + i, EMPTY);
+
+  // paint
+  update();
 }
 
+// TODO
 void Game::gameOver() {
-}
-
-void Game::mousePressEvent(QMouseEvent *event) {
-  if (event->button() == Qt::MouseButton::LeftButton)
-    for (int i = 0; i < grids.size(); i++)
-      if (grids[i].contains(event->pos())) {
-        if (focus == -1)
-          focusOn(i);
-        else
-          moveFromTo(focus, i);
-        return;
-      }
-  focusOff();
 }
 
 void Game::setStatus(int i, STATUS s) {
@@ -213,15 +238,6 @@ void Game::moveFromTo(int f, int t) {
   if (ts == RF || ts == BF) gameOver();
 }
 
-bool Game::isAdjacent(int a, int b) {
-  int dist = (grids[a].topLeft() - grids[b].topLeft()).manhattanLength();
-  int left = grids[a].left();
-  if (dist == 44 || dist == 94) return true;
-  if (dist == 138 && (gridType[a] == CAMP || gridType[b] == CAMP)) return true;
-  if (dist == 140 && (left == 0 || left == 188 || left == 376)) return true;
-  return false;
-}
-
 bool Game::isReachable(int a, int b) {
   // coincide
   if (a == b) return false;
@@ -230,7 +246,7 @@ bool Game::isReachable(int a, int b) {
   if (gridType[b] == CAMP && gridStatus[b] != EMPTY) return false;
 
   // adjacent
-  if (isAdjacent(a, b)) return true;
+  if (adjacentTable[a][b]) return true;
 
   // off railway
   if (gridType[a] != RAILWAY || gridType[b] != RAILWAY) return false;
@@ -241,7 +257,7 @@ bool Game::isReachable(int a, int b) {
     for (int j : railwayStations)
       if (j == a || reachable[j] && gridStatus[j] == EMPTY)
         for (int k : railwayStations)
-          if (isAdjacent(j, k)) reachable[k] = true;
+          if (adjacentTable[j][k]) reachable[k] = true;
   }
   if (!reachable[b]) return false;
 
@@ -260,4 +276,23 @@ bool Game::isAttackable(STATUS a, STATUS b) {
   if (b == BF)
     if (numOfBM) return false;
   return attackTable[a][b];
+}
+
+void Game::mousePressEvent(QMouseEvent *event) {
+  if (event->button() == Qt::MouseButton::LeftButton)
+    for (int i = grids.size(); i--; )
+      if (grids[i].contains(event->pos())) {
+        if (focus == -1)
+          focusOn(i);
+        else
+          moveFromTo(focus, i);
+        return;
+      }
+  focusOff();
+}
+
+void Game::paintEvent(QPaintEvent *event) {
+  QPainter p(this);
+  p.setTransform(tr);
+  p.drawPixmap(QRect(0, 0, 441, 614), QPixmap(":/Chess/Grids"));
 }
