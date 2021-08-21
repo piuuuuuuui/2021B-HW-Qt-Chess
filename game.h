@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <set>
 #include <QWidget>
 #include <QLabel>
 #include <QMouseEvent>
@@ -15,6 +16,7 @@ private:
   enum TYPE : int;
   const std::vector<QPixmap> pics;
   const std::vector<int> railwayStations;
+  const std::vector<std::set<int>> railways;
   const std::vector<std::vector<bool>> attackTable;
   std::vector<QRect> grids;
   std::vector<STATUS> gridStatus, initStatus;

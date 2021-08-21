@@ -19,7 +19,7 @@ enum Game::STATUS : int {
   RM, BM, // Mine
 };
 
-enum Game::TYPE : int {STATION, CAMP};
+enum Game::TYPE : int {STATION, RAILWAY, CAMP};
 
 Game::Game(QWidget *parent)
     : QWidget(parent),
@@ -51,6 +51,15 @@ Game::Game(QWidget *parent)
         40,             44,
         45,             49,
         50, 51, 52, 53, 54
+      }),
+      railways({
+        {5, 6, 7, 8, 9},
+        {25, 26, 27, 28, 29},
+        {30, 31, 32, 33, 34},
+        {50, 51, 52, 53, 54},
+        {5, 10, 15, 20, 25, 30, 35, 40, 45, 50},
+        {9, 14, 19, 24, 29, 34, 39, 44, 49, 54},
+        {27, 32}
       }),
       attackTable({
         /*     EM UN R1 B1 R2 B2 R3 B3 R4 B4 R5 B5 R6 B6 R7 B7 R8 B8 R9 B9 RF BF RB BB RM BM */
@@ -97,6 +106,9 @@ void Game::start() {
   // set grid status and type
   gridStatus.assign(60, UNKNOWN);
   gridType.assign(60, STATION);
+  for (int i : railwayStations) {
+    gridType[i] = RAILWAY;
+  }
   for (int i : {11, 13, 17, 21, 23, 36, 38, 42, 46, 48}) {
     gridStatus[i] = EMPTY;
     gridType[i] = CAMP;
@@ -137,8 +149,10 @@ void Game::mousePressEvent(QMouseEvent *event) {
   if (event->button() == Qt::MouseButton::LeftButton)
     for (int i = 0; i < grids.size(); i++)
       if (grids[i].contains(event->pos())) {
-        if (focus == -1) focusOn(i);
-        else moveFromTo(focus, i);
+        if (focus == -1)
+          focusOn(i);
+        else
+          moveFromTo(focus, i);
         return;
       }
   focusOff();
@@ -195,6 +209,10 @@ void Game::moveFromTo(int f, int t) {
     numOfRM--;
   if (ts == BM)
     numOfBM--;
+
+  // winning check
+  if (ts == RF || ts == BF)
+    setEnabled(false);
 }
 
 bool Game::isAdjacent(int a, int b) {
@@ -217,22 +235,24 @@ bool Game::isReachable(int a, int b) {
   if (isAdjacent(a, b)) return true;
 
   // off railway
-  int na = 0, nb = 0;
-  while (na < 32 && a != railwayStations[na]) na++;
-  while (nb < 32 && b != railwayStations[nb]) nb++;
-  if (na == 32 || nb == 32) return false;
+  if (gridType[a] != RAILWAY || gridType[b] != RAILWAY) return false;
   
   // Floyd-Warshall
-  std::vector<bool> reachable(32, false);
-  for (int k = 0; k < 32; k++)
-    if (isAdjacent(a, railwayStations[k])) reachable[k] = true;
+  std::vector<bool> reachable(60, false);
   for (int i = 0; i < 32; i++) {
-    if (reachable[nb] == true) return true;
-    for (int j = 0; j < 32; j++)
-      if (reachable[j] && gridStatus[railwayStations[j]] == EMPTY)
-        for (int k = 0; k < 32; k++)
-          if (isAdjacent(railwayStations[j], railwayStations[k])) reachable[k] = true;
+    for (int j : railwayStations)
+      if (j == a || reachable[j] && gridStatus[j] == EMPTY)
+        for (int k : railwayStations)
+          if (isAdjacent(j, k)) reachable[k] = true;
   }
+  if (!reachable[b]) return false;
+
+  // GongBing
+  if (gridStatus[a] == R1 || gridStatus[a] == B1) return true;
+
+  // others (move straight only)
+  for (auto railway : railways)
+    if (railway.count(a) && railway.count(b)) return true;
   return false;
 }
 
