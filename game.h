@@ -8,7 +8,7 @@
 
 class Game : public QWidget {
 
-  // Q_OBJECT
+  Q_OBJECT
 
 public:
   Game(QWidget *parent = Q_NULLPTR);
@@ -39,7 +39,7 @@ private:
   std::vector<TYPE> gridType;
 
   // display
-  QTransform tr;
+  QTransform rot;
   std::vector<QLabel *> pieces;
 
   // runtime variables

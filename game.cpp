@@ -91,10 +91,10 @@ Game::Game(QWidget *parent)
         /*RM*/ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         /*BM*/ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
       }) {
-  setStyleSheet("border-image:url(:/Chess/Background)");
-  tr.translate(220, 600);
-  tr.rotate(20, Qt::XAxis);
-  tr.translate(-220, -600);
+  rot.translate(220, 600);
+  rot.rotate(20, Qt::XAxis);
+  rot.translate(-220, -600);
+  update();
   setGrids();
   setAdjacentTable();
   gameStart();
@@ -103,7 +103,7 @@ Game::Game(QWidget *parent)
 void Game::setGrids() {
   for (int i = 0; i < 6; i++)
     for (int j = 0; j < 5; j++) {
-      QLine bottom = tr.map(QLine(j * 94 + 5, i * 44 + 27, j * 94 + 32, i * 44 + 27));
+      QLine bottom = rot.map(QLine(j * 94 + 5, i * 44 + 27, j * 94 + 32, i * 44 + 27));
       grids.push_back(QRect(
         bottom.x1(),
         bottom.y1() - bottom.dx(),
@@ -113,7 +113,7 @@ void Game::setGrids() {
     }
   for (int i = 0; i < 6; i++)
     for (int j = 0; j < 5; j++) {
-      QLine bottom = tr.map(QLine(j * 94 + 5, i * 44 + 387, j * 94 + 32, i * 44 + 387));
+      QLine bottom = rot.map(QLine(j * 94 + 5, i * 44 + 387, j * 94 + 32, i * 44 + 387));
       grids.push_back(QRect(
         bottom.x1(),
         bottom.y1() - bottom.dx(),
@@ -177,9 +177,6 @@ void Game::gameStart() {
   );
   for (int i : camps)
     initStatus.insert(initStatus.begin() + i, EMPTY);
-
-  // paint
-  update();
 }
 
 // TODO
@@ -293,6 +290,6 @@ void Game::mousePressEvent(QMouseEvent *event) {
 
 void Game::paintEvent(QPaintEvent *event) {
   QPainter p(this);
-  p.setTransform(tr);
+  p.setTransform(rot);
   p.drawPixmap(QRect(0, 0, 441, 614), QPixmap(":/Chess/Grids"));
 }
