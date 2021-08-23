@@ -13,6 +13,7 @@ class Game : public QWidget {
 
 public:
   Game(QWidget *parent = Q_NULLPTR);
+  ~Game();
 
 protected:
   void paintEvent(QPaintEvent *);

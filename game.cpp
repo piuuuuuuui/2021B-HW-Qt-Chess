@@ -77,6 +77,15 @@ Game::Game(QWidget *parent)
   rot.translate(-220, -600);
   setGrids();
   setAdjacent();
+  for (int i = 0; i < 60; i++){
+    pieces.push_back(new QLabel(this));
+    pieces[i]->setGeometry(grids[i]);
+    pieces[i]->setScaledContents(true);
+  }
+}
+
+Game::~Game() {
+  for (auto p : pieces) delete p;
 }
 
 void Game::paintEvent(QPaintEvent *event) {
@@ -262,15 +271,8 @@ void Game::start() {
   }
 
   // set chess pieces
-  if (pieces.size() > 0)
-    for (auto piece : pieces) delete piece;
-  pieces.clear();
-  for (int i = 0; i < 60; i++) {
-    pieces.push_back(new QLabel(this));
-    pieces[i]->setGeometry(grids[i]);
-    pieces[i]->setScaledContents(true);
+  for (int i = 0; i < 60; i++)
     setStatus(i, grids[i].stat);
-  }
 
   // initialize pieces randomly
   initStatus.clear();
