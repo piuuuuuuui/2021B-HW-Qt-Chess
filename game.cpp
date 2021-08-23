@@ -2,24 +2,8 @@
 #include <qstyle.h>
 #include "game.h"
 
-enum Game::STATUS : int {
-  EMPTY,
-  UNKNOWN,
-  R1, B1, // GongBing
-  R2, B2, // PaiZhang
-  R3, B3, // LianZhang
-  R4, B4, // YingZhang
-  R5, B5, // TuanZhang
-  R6, B6, // LvZhang
-  R7, B7, // ShiZhang
-  R8, B8, // JunZhang
-  R9, B9, // SiLing
-  RF, BF, // Flag
-  RB, BB, // Bomb
-  RM, BM, // Mine
-};
-
-enum Game::TYPE : int {STATION, RAILWAY, CAMP};
+using enum STATUS;
+using enum TYPE;
 
 Game::Game(QWidget *parent)
     : QWidget(parent),
@@ -144,23 +128,20 @@ void Game::setAdjacentTable() {
 
 void Game::gameStart() {
   // set grid status and type
-  gridStatus.assign(60, UNKNOWN);
-  gridType.assign(60, STATION);
   for (int i : railwayStations) {
-    gridType[i] = RAILWAY;
+    grids[i].type = RAILWAY;
   }
   for (int i : camps) {
-    gridStatus[i] = EMPTY;
-    gridType[i] = CAMP;
+    grids[i].stat = EMPTY;
+    grids[i].type = CAMP;
   }
 
   // set chess pieces
-  pieces.assign(60, Q_NULLPTR);
   for (int i = 0; i < 60; i++) {
-    pieces[i] = new QLabel(this);
+    pieces.push_back(new QLabel(this));
     pieces[i]->setGeometry(grids[i]);
     pieces[i]->setScaledContents(true);
-    setStatus(i, gridStatus[i]);
+    setStatus(i, grids[i].stat);
   }
 
   // initialize pieces randomly
@@ -184,7 +165,7 @@ void Game::gameOver() {
 }
 
 void Game::setStatus(int i, STATUS s) {
-  gridStatus[i] = s;
+  grids[i].stat = s;
   if (s == EMPTY) {
     pieces[i]->hide();
   } else {
@@ -194,8 +175,8 @@ void Game::setStatus(int i, STATUS s) {
 }
 
 void Game::focusOn(int f) {
-  if (gridStatus[f] == EMPTY) return;
-  if (gridStatus[f] == UNKNOWN) {
+  if (grids[f].stat == EMPTY) return;
+  if (grids[f].stat == UNKNOWN) {
     setStatus(f, initStatus[f]);
     return;
   }
@@ -213,7 +194,7 @@ void Game::moveFromTo(int f, int t) {
   focusOff();
 
   // check moveability
-  STATUS fs = gridStatus[f], ts = gridStatus[t];
+  STATUS fs = grids[f].stat, ts = grids[t].stat;
   if (!isReachable(f, t) ||
       !isAttackable(fs, ts))
     return;
@@ -236,30 +217,30 @@ void Game::moveFromTo(int f, int t) {
 }
 
 bool Game::isReachable(int a, int b) {
-  // coincide
+  // conflict
   if (a == b) return false;
 
   // protected
-  if (gridType[b] == CAMP && gridStatus[b] != EMPTY) return false;
+  if (grids[b].type == CAMP && grids[b].stat != EMPTY) return false;
 
   // adjacent
   if (adjacentTable[a][b]) return true;
 
   // off railway
-  if (gridType[a] != RAILWAY || gridType[b] != RAILWAY) return false;
+  if (grids[a].type != RAILWAY || grids[b].type != RAILWAY) return false;
   
   // Floyd-Warshall
   std::vector<bool> reachable(60, false);
   for (int i = 0; i < 32; i++) {
     for (int j : railwayStations)
-      if (j == a || reachable[j] && gridStatus[j] == EMPTY)
+      if (j == a || reachable[j] && grids[j].stat == EMPTY)
         for (int k : railwayStations)
           if (adjacentTable[j][k]) reachable[k] = true;
   }
   if (!reachable[b]) return false;
 
   // GongBing
-  if (gridStatus[a] == R1 || gridStatus[a] == B1) return true;
+  if (grids[a].stat == R1 || grids[a].stat == B1) return true;
 
   // others (move straight only)
   for (auto railway : railways)

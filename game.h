@@ -5,6 +5,7 @@
 #include <QLabel>
 #include <QMouseEvent>
 #include <QPainter>
+#include "grid.h"
 
 class Game : public QWidget {
 
@@ -18,9 +19,6 @@ protected:
   void paintEvent(QPaintEvent *);
 
 private:
-  enum STATUS : int;
-  enum TYPE : int;
-
   // textures
   const std::vector<QPixmap> pics;
 
@@ -34,9 +32,8 @@ private:
   std::vector<std::vector<bool>> adjacentTable;
 
   // grids
-  std::vector<QRect> grids;
-  std::vector<STATUS> gridStatus, initStatus;
-  std::vector<TYPE> gridType;
+  std::vector<Grid> grids;
+  std::vector<STATUS> initStatus;
 
   // display
   QTransform rot;
