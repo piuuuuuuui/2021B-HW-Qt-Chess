@@ -10,16 +10,16 @@ class Chess : public QMainWindow {
   Q_OBJECT
 
 public:
-  Chess(QWidget *parent = Q_NULLPTR);
+  Chess(QWidget *parent = nullptr);
 
 protected:
   void paintEvent(QPaintEvent *);
 
 private:
   Ui::ChessClass ui;
-  QTcpServer *server;
-  QTcpSocket *socket;
-  Game *game = Q_NULLPTR;
+  QTcpServer *tcpServer;
+  QTcpSocket *tcpSocketServer, *tcpSocketClient;
+  Game *game = nullptr;
 
   void connecting(bool);
   void gameInit();
@@ -30,4 +30,9 @@ public slots:
   void disconnect();
   void gameStart();
   void gameOver();
+
+private slots:
+  void onNewConnection();
+  void onConnectedToServer();
+  void onDisconnectedFromhost();
 };
