@@ -12,7 +12,7 @@ class Game : public QWidget {
   Q_OBJECT
 
 public:
-  Game(QWidget *parent = Q_NULLPTR);
+  Game(QWidget *parent = nullptr);
   ~Game();
 
 protected:
