@@ -29,6 +29,7 @@
     </property>
     <addaction name="actionCreate_the_connection"/>
     <addaction name="actionConnect_to_server"/>
+    <addaction name="actionDisconnect"/>
    </widget>
    <widget class="QMenu" name="menuPlay">
     <property name="title">
@@ -52,6 +53,9 @@
    </property>
   </action>
   <action name="actionStart">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Start</string>
    </property>
@@ -62,6 +66,14 @@
    </property>
    <property name="text">
     <string>Admit defeat</string>
+   </property>
+  </action>
+  <action name="actionDisconnect">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Disconnect</string>
    </property>
   </action>
  </widget>
