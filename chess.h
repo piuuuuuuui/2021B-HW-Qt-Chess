@@ -15,5 +15,9 @@ protected:
 
 private:
   Ui::ChessClass ui;
-  Game *game;
+  Game *game = Q_NULLPTR;
+
+public slots:
+  void gameStart();
+  void gameOver();
 };

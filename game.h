@@ -3,8 +3,8 @@
 #include <set>
 #include <QWidget>
 #include <QLabel>
-#include <QMouseEvent>
 #include <QPainter>
+#include <QMouseEvent>
 #include "grid.h"
 
 class Game : public QWidget {
@@ -15,48 +15,50 @@ public:
   Game(QWidget *parent = Q_NULLPTR);
 
 protected:
-  void mousePressEvent(QMouseEvent *);
   void paintEvent(QPaintEvent *);
+  void mousePressEvent(QMouseEvent *);
 
 private:
   // textures
   const std::vector<QPixmap> pics;
-
   // properties
   const std::vector<int> railwayStations;
   const std::vector<int> camps;
   const std::vector<std::set<int>> railways;
-
   // logic
-  std::vector<std::vector<bool>> attackTable;
-  std::vector<std::vector<bool>> adjacentTable;
-
+  std::vector<std::vector<bool>> attackable;
+  std::vector<std::vector<bool>> adjacent;
   // grids
   std::vector<Grid> grids;
   std::vector<STATUS> initStatus;
-
   // display
   QTransform rot;
   std::vector<QLabel *> pieces;
-
   // runtime variables
-  int focus = -1;
-  int numOfRM = 3;
-  int numOfBM = 3;
+  bool available = false;
+  int round;
+  int focus;
+  int numOfRM;
+  int numOfBM;
 
   // initialize
   void setGrids();
-  void setAdjacentTable();
-
-  // game control
-  void gameStart();
-  void gameOver();
-
+  void setAdjacent();
   // other
   void setStatus(int, STATUS);
   void focusOn(int);
   void focusOff();
   void moveFromTo(int, int);
+  void updateRound();
   bool isReachable(int, int);
   bool isAttackable(STATUS, STATUS);
+
+public slots:
+  void start();
+  void win();
+  void lose();
+
+signals:
+  void enableSurrender(bool);
+  void over();
 };

@@ -1,9 +1,6 @@
 #include <random>
-#include <qstyle.h>
+#include <QStyle>
 #include "game.h"
-
-using enum STATUS;
-using enum TYPE;
 
 Game::Game(QWidget *parent)
     : QWidget(parent),
@@ -46,7 +43,7 @@ Game::Game(QWidget *parent)
         {9, 14, 19, 24, 29, 34, 39, 44, 49, 54},
         {27, 32}
       }),
-      attackTable({
+      attackable({
         /*     EM UN R1 B1 R2 B2 R3 B3 R4 B4 R5 B5 R6 B6 R7 B7 R8 B8 R9 B9 RF BF RB BB RM BM */
         /*EM*/ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         /*UN*/ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -76,12 +73,30 @@ Game::Game(QWidget *parent)
         /*BM*/ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
       }) {
   rot.translate(220, 600);
-  rot.rotate(20, Qt::XAxis);
+  rot.rotate(30, Qt::XAxis);
   rot.translate(-220, -600);
-  update();
   setGrids();
-  setAdjacentTable();
-  gameStart();
+  setAdjacent();
+}
+
+void Game::paintEvent(QPaintEvent *event) {
+  QPainter p(this);
+  p.setTransform(rot);
+  p.drawPixmap(QRect(0, 0, 441, 614), QPixmap(":/Chess/Grids"));
+}
+
+void Game::mousePressEvent(QMouseEvent *event) {
+  if (!available) return;
+  if (event->button() == Qt::MouseButton::LeftButton)
+    for (int i = grids.size(); i--; )
+      if (grids[i].contains(event->pos())) {
+        if (focus == -1)
+          focusOn(i);
+        else
+          moveFromTo(focus, i);
+        return;
+      }
+  focusOff();
 }
 
 void Game::setGrids() {
@@ -107,61 +122,23 @@ void Game::setGrids() {
     }
 }
 
-void Game::setAdjacentTable() {
-  adjacentTable.resize(60);
-  for (auto &adj : adjacentTable) adj.assign(60, false);
+void Game::setAdjacent() {
+  adjacent.resize(60);
+  for (auto &adj : adjacent) adj.assign(60, false);
   for (int i = 0; i < 60; i++) {
-    if (i >= 5) adjacentTable[i][i - 5] = true;     // up
-    if (i < 55) adjacentTable[i][i + 5] = true;     // down
-    if (i % 5 != 0) adjacentTable[i][i - 1] = true; // left
-    if (i % 5 != 4) adjacentTable[i][i + 1] = true; // right
+    if (i >= 5) adjacent[i][i - 5] = true;     // up
+    if (i < 55) adjacent[i][i + 5] = true;     // down
+    if (i % 5 != 0) adjacent[i][i - 1] = true; // left
+    if (i % 5 != 4) adjacent[i][i + 1] = true; // right
   }
   for (int i : camps) {
-    adjacentTable[i][i - 6] = adjacentTable[i - 6][i] =
-    adjacentTable[i][i - 4] = adjacentTable[i - 4][i] =
-    adjacentTable[i][i + 4] = adjacentTable[i + 4][i] =
-    adjacentTable[i][i + 6] = adjacentTable[i + 6][i] = true;
+    adjacent[i][i - 6] = adjacent[i - 6][i] =
+    adjacent[i][i - 4] = adjacent[i - 4][i] =
+    adjacent[i][i + 4] = adjacent[i + 4][i] =
+    adjacent[i][i + 6] = adjacent[i + 6][i] = true;
   }
-  adjacentTable[26][31] = adjacentTable[31][26] =
-  adjacentTable[28][33] = adjacentTable[33][28] = false;
-}
-
-void Game::gameStart() {
-  // set grid status and type
-  for (int i : railwayStations) {
-    grids[i].type = RAILWAY;
-  }
-  for (int i : camps) {
-    grids[i].stat = EMPTY;
-    grids[i].type = CAMP;
-  }
-
-  // set chess pieces
-  for (int i = 0; i < 60; i++) {
-    pieces.push_back(new QLabel(this));
-    pieces[i]->setGeometry(grids[i]);
-    pieces[i]->setScaledContents(true);
-    setStatus(i, grids[i].stat);
-  }
-
-  // initialize pieces randomly
-  for (STATUS s : {R1, B1, R2, B2, R3, B3, RM, BM})
-    initStatus.insert(initStatus.end(), 3, s);
-  for (STATUS s : {R4, B4, R5, B5, R6, B6, R7, B7, RB, BB})
-    initStatus.insert(initStatus.end(), 2, s);
-  for (STATUS s : {R8, B8, R9, B9, RF, BF})
-    initStatus.insert(initStatus.end(), 1, s);
-  std::shuffle(
-    initStatus.begin(),
-    initStatus.end(),
-    std::default_random_engine((unsigned)(new char))
-  );
-  for (int i : camps)
-    initStatus.insert(initStatus.begin() + i, EMPTY);
-}
-
-// TODO
-void Game::gameOver() {
+  adjacent[26][31] = adjacent[31][26] =
+  adjacent[28][33] = adjacent[33][28] = false;
 }
 
 void Game::setStatus(int i, STATUS s) {
@@ -178,6 +155,7 @@ void Game::focusOn(int f) {
   if (grids[f].stat == EMPTY) return;
   if (grids[f].stat == UNKNOWN) {
     setStatus(f, initStatus[f]);
+    updateRound();
     return;
   }
   focus = f;
@@ -200,6 +178,7 @@ void Game::moveFromTo(int f, int t) {
     return;
 
   // execute
+  setStatus(f, EMPTY);
   if ((fs ^ ts) == 1 ||
       ts != EMPTY && (
         fs == RB ||
@@ -208,12 +187,18 @@ void Game::moveFromTo(int f, int t) {
   } else {
     setStatus(t, fs);
   }
-  setStatus(f, EMPTY);
+  updateRound();
 
   // post-check
   if (ts == RM) numOfRM--;
   if (ts == BM) numOfBM--;
-  if (ts == RF || ts == BF) gameOver();
+  if (ts == RF || ts == BF) win();
+}
+
+void Game::updateRound() {
+  qDebug() << "Round" << ++round;
+  //available = !available; // exchange control
+  if (round == 20) emit enableSurrender(true);
 }
 
 bool Game::isReachable(int a, int b) {
@@ -224,7 +209,7 @@ bool Game::isReachable(int a, int b) {
   if (grids[b].type == CAMP && grids[b].stat != EMPTY) return false;
 
   // adjacent
-  if (adjacentTable[a][b]) return true;
+  if (adjacent[a][b]) return true;
 
   // off railway
   if (grids[a].type != RAILWAY || grids[b].type != RAILWAY) return false;
@@ -235,7 +220,7 @@ bool Game::isReachable(int a, int b) {
     for (int j : railwayStations)
       if (j == a || reachable[j] && grids[j].stat == EMPTY)
         for (int k : railwayStations)
-          if (adjacentTable[j][k]) reachable[k] = true;
+          if (adjacent[j][k]) reachable[k] = true;
   }
   if (!reachable[b]) return false;
 
@@ -253,24 +238,65 @@ bool Game::isAttackable(STATUS a, STATUS b) {
     if (numOfRM) return false;
   if (b == BF)
     if (numOfBM) return false;
-  return attackTable[a][b];
+  return attackable[a][b];
 }
 
-void Game::mousePressEvent(QMouseEvent *event) {
-  if (event->button() == Qt::MouseButton::LeftButton)
-    for (int i = grids.size(); i--; )
-      if (grids[i].contains(event->pos())) {
-        if (focus == -1)
-          focusOn(i);
-        else
-          moveFromTo(focus, i);
-        return;
-      }
-  focusOff();
+void Game::start() {
+  available = true;
+  round = 0;
+  focus = -1; // defocus
+  numOfRM = 3;
+  numOfBM = 3;
+
+  // set grids
+  for (auto &grid : grids) {
+    grid.stat = UNKNOWN;
+    grid.type = STATION;
+  }
+  for (int i : railwayStations) {
+    grids[i].type = RAILWAY;
+  }
+  for (int i : camps) {
+    grids[i].stat = EMPTY;
+    grids[i].type = CAMP;
+  }
+
+  // set chess pieces
+  if (pieces.size() > 0)
+    for (auto piece : pieces) delete piece;
+  pieces.clear();
+  for (int i = 0; i < 60; i++) {
+    pieces.push_back(new QLabel(this));
+    pieces[i]->setGeometry(grids[i]);
+    pieces[i]->setScaledContents(true);
+    setStatus(i, grids[i].stat);
+  }
+
+  // initialize pieces randomly
+  initStatus.clear();
+  for (auto s : {R1, B1, R2, B2, R3, B3, RM, BM})
+    initStatus.insert(initStatus.end(), 3, s);
+  for (auto s : {R4, B4, R5, B5, R6, B6, R7, B7, RB, BB})
+    initStatus.insert(initStatus.end(), 2, s);
+  for (auto s : {R8, B8, R9, B9, RF, BF})
+    initStatus.insert(initStatus.end(), 1, s);
+  std::shuffle(
+    initStatus.begin(),
+    initStatus.end(),
+    std::default_random_engine((unsigned)(new char))
+  );
+  for (int i : camps)
+    initStatus.insert(initStatus.begin() + i, EMPTY);
 }
 
-void Game::paintEvent(QPaintEvent *event) {
-  QPainter p(this);
-  p.setTransform(rot);
-  p.drawPixmap(QRect(0, 0, 441, 614), QPixmap(":/Chess/Grids"));
+void Game::win() {
+  available = false;
+  qDebug() << "You Win";
+  emit over();
+}
+
+void Game::lose() {
+  available = false;
+  qDebug() << "You Lose";
+  emit over();
 }
