@@ -29,6 +29,5 @@ public slots:
   void disconnect();
   void gameStart();
   void gameOver();
-  void writeClick(int);
   void read();
 };
