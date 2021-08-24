@@ -4,13 +4,6 @@ Chess::Chess(QWidget *parent) : QMainWindow(parent) {
   ui.setupUi(this);
   setFixedSize(width(), height());
 
-  tcpServer = new QTcpServer();
-  tcpSocketServer = nullptr;
-  tcpSocketClient = new QTcpSocket();
-  connect(tcpServer, &QTcpServer::newConnection, this, &Chess::onNewConnection);
-  connect(tcpSocketClient, &QTcpSocket::connected, this, &Chess::onConnectedToServer);
-  connect(tcpSocketClient, &QTcpSocket::disconnected, this, &Chess::onDisconnectedFromhost);
-
   connect(ui.actionCreate_the_connection, &QAction::triggered, this, &Chess::setServer);
   connect(ui.actionConnect_to_server, &QAction::triggered, this, &Chess::setClient);
   connect(ui.actionDisconnect, &QAction::triggered, this, &Chess::disconnect);
@@ -39,19 +32,26 @@ void Chess::gameInit() {
 }
 
 void Chess::setServer() {
+  tcpServer = new QTcpServer();
+  connect(tcpServer, &QTcpServer::newConnection, this, &Chess::onConnectedToClient);
   if (!tcpServer->listen(QHostAddress::LocalHost, 8080)) {
     qDebug() << "Failed to listen";
     return;
   }
   qDebug() << "Listening";
-  connecting(true);
   gameInit();
+  connecting(true);
 }
 
 void Chess::setClient() {
+  tcpSocketClient = new QTcpSocket();
+  connect(tcpSocketClient, &QTcpSocket::connected, this, &Chess::onConnectedToServer);
+  connect(tcpSocketClient, &QTcpSocket::disconnected, this, &Chess::onDisconnectedFromServer);
   tcpSocketClient->connectToHost(QHostAddress::LocalHost, 8080);
   qDebug() << "Connecting";
+  gameInit();
   connecting(true);
+  ui.actionStart->setEnabled(false);
 }
 
 void Chess::disconnect() {
@@ -59,12 +59,25 @@ void Chess::disconnect() {
     delete game;
     game = nullptr;
   }
-  tcpServer->close();
-  tcpSocketClient->disconnectFromHost();
+  if (tcpServer) {
+    if (tcpSocketServer) {
+      tcpSocketServer->disconnectFromHost();
+      delete tcpSocketServer;
+      tcpSocketServer = nullptr;
+    }
+    tcpServer->close();
+    delete tcpServer;
+    tcpServer = nullptr;
+  } else if (tcpSocketClient) {
+    tcpSocketClient->disconnectFromHost();
+    delete tcpSocketClient;
+    tcpSocketClient = nullptr;
+  }
   connecting(false);
 }
 
 void Chess::gameStart() {
+  ready = true;
   ui.actionStart->setEnabled(false);
   ui.actionAdmit_defeat->setEnabled(false);
   qDebug() << "Game start";
@@ -72,19 +85,27 @@ void Chess::gameStart() {
 }
 
 void Chess::gameOver() {
+  ready = false;
   ui.actionStart->setEnabled(true);
   ui.actionAdmit_defeat->setEnabled(false);
   qDebug() << "Game over";
 }
 
-void Chess::onNewConnection() {
+void Chess::onConnectedToClient() {
+  qDebug() << "Connected to client";
   tcpSocketServer = tcpServer->nextPendingConnection();
+  connect(tcpSocketServer, &QTcpSocket::disconnected, this, &Chess::onDisconnectedFromClient);
 }
 
 void Chess::onConnectedToServer() {
+  ui.actionStart->setEnabled(true);
   qDebug() << "Connected to server";
 }
 
-void Chess::onDisconnectedFromhost() {
-  qDebug() << "Disconnected from host";
+void Chess::onDisconnectedFromClient() {
+  qDebug() << "Disconnected from client";
+}
+
+void Chess::onDisconnectedFromServer() {
+  qDebug() << "Disconnected from server";
 }

@@ -17,8 +17,9 @@ protected:
 
 private:
   Ui::ChessClass ui;
-  QTcpServer *tcpServer;
-  QTcpSocket *tcpSocketServer, *tcpSocketClient;
+  QTcpServer *tcpServer = nullptr;
+  QTcpSocket *tcpSocketServer = nullptr, *tcpSocketClient = nullptr;
+  bool ready = false;
   Game *game = nullptr;
 
   void connecting(bool);
@@ -32,7 +33,8 @@ public slots:
   void gameOver();
 
 private slots:
-  void onNewConnection();
+  void onConnectedToClient();
   void onConnectedToServer();
-  void onDisconnectedFromhost();
+  void onDisconnectedFromClient();
+  void onDisconnectedFromServer();
 };
