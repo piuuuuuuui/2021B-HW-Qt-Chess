@@ -88,6 +88,13 @@ Game::~Game() {
   for (auto p : pieces) delete p;
 }
 
+void Game::clickOn(int i) {
+  if (focus == -1)
+    focusOn(i);
+  else
+    moveFromTo(focus, i);
+}
+
 void Game::paintEvent(QPaintEvent *event) {
   QPainter p(this);
   p.setTransform(rot);
@@ -99,10 +106,8 @@ void Game::mousePressEvent(QMouseEvent *event) {
   if (event->button() == Qt::MouseButton::LeftButton)
     for (int i = grids.size(); i--; )
       if (grids[i].contains(event->pos())) {
-        if (focus == -1)
-          focusOn(i);
-        else
-          moveFromTo(focus, i);
+        emit clicked(i);
+        clickOn(i);
         return;
       }
   focusOff();
@@ -216,8 +221,8 @@ void Game::moveFromTo(int f, int t) {
 
 void Game::updateRound() {
   qDebug() << "Round" << ++round;
-  //available = !available; // exchange control
-  if (round == 20) emit enableSurrender(true);
+  available = !available; // exchange control
+  if (round == 20) emit enableResign(true);
 }
 
 bool Game::isReachable(int a, int b) {
@@ -260,8 +265,8 @@ bool Game::isAttackable(STATUS a, STATUS b) {
   return attackable[a][b];
 }
 
-void Game::start() {
-  available = true;
+void Game::start(unsigned seed, bool first) {
+  available = first;
   round = 0;
   focus = -1; // defocus
   numOfRM = 3;
@@ -295,10 +300,11 @@ void Game::start() {
   std::shuffle(
     initStatus.begin(),
     initStatus.end(),
-    std::default_random_engine((unsigned)(new char))
+    std::default_random_engine(seed)
   );
   for (int i : camps)
     initStatus.insert(initStatus.begin() + i, EMPTY);
+  if (first) std::reverse(initStatus.begin(), initStatus.end());
 }
 
 void Game::win() {
