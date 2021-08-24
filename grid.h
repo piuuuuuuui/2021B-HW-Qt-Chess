@@ -1,6 +1,8 @@
 #pragma once
 #include <QRect>
 
+enum COLOR : int {RED, BLUE, NO};
+
 enum STATUS : int {
   EMPTY,
   UNKNOWN,
@@ -24,4 +26,6 @@ struct Grid : public QRect {
   Grid(const QRect &);
   STATUS stat;
   TYPE type;
+
+  COLOR getColor();
 };

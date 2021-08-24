@@ -164,9 +164,19 @@ void Game::focusOn(int f) {
   if (grids[f].stat == EMPTY) return;
   if (grids[f].stat == UNKNOWN) {
     setStatus(f, initStatus[f]);
+    if (color == NO) {
+      if (grids[f].getColor() == last2) {
+        color = COLOR(!available ^ grids[f].getColor());
+        qDebug() << (color ? "BLUE" : "RED");
+      } else {
+        last2 = last1;
+        last1 = grids[f].getColor();
+      }
+    }
     updateRound();
     return;
   }
+  if (color == NO || color == available ^ grids[f].getColor()) return;
   focus = f;
   pieces[focus]->setEnabled(false);
 }

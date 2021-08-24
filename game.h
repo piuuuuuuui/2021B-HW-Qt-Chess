@@ -14,6 +14,7 @@ class Game : public QWidget {
 public:
   Game(QWidget *parent = nullptr);
   ~Game();
+  void clickOn(int);
 
 protected:
   void paintEvent(QPaintEvent *);
@@ -36,6 +37,7 @@ private:
   QTransform rot;
   std::vector<QLabel *> pieces;
   // runtime variables
+  COLOR color = NO, last1 = NO, last2 = NO;
   bool available = false;
   int round;
   int focus;
@@ -55,11 +57,12 @@ private:
   bool isAttackable(STATUS, STATUS);
 
 public slots:
-  void start();
+  void start(unsigned, bool);
   void win();
   void lose();
 
 signals:
-  void enableSurrender(bool);
+  void clicked(int);
+  void enableResign(bool);
   void over();
 };
