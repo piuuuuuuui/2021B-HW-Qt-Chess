@@ -89,7 +89,9 @@ Game::~Game() {
 }
 
 void Game::clickOn(int i) {
-  if (focus == -1)
+  if (i == -1 || i == 60)
+    focusOff();
+  else if (focus == -1)
     focusOn(i);
   else
     moveFromTo(focus, i);
@@ -103,14 +105,16 @@ void Game::paintEvent(QPaintEvent *event) {
 
 void Game::mousePressEvent(QMouseEvent *event) {
   if (!available) return;
-  if (event->button() == Qt::MouseButton::LeftButton)
-    for (int i = grids.size(); i--; )
+  if (event->button() == Qt::MouseButton::LeftButton) {
+    int i = 0;
+    for (; i < 60; i++) {
       if (grids[i].contains(event->pos())) {
-        emit clicked(i);
-        clickOn(i);
-        return;
+        break;
       }
-  focusOff();
+    }
+    emit clicked(i);
+    clickOn(i);
+  }
 }
 
 void Game::setGrids() {
