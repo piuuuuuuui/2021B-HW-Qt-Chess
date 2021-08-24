@@ -45,10 +45,12 @@ void Chess::setServer() {
                         game = nullptr;
                       }
                       ui.actionStart->setEnabled(false);
+                      ui.actionAdmit_defeat->setEnabled(false);
                     });
             connect(tcpSocket, &QTcpSocket::readyRead, this, &Chess::read);
             gameInit();
             ui.actionStart->setEnabled(true);
+            ui.actionAdmit_defeat->setEnabled(false);
           });
 
   // start listening
@@ -69,6 +71,7 @@ void Chess::setClient() {
             qDebug() << "Connected to server";
             gameInit();
             ui.actionStart->setEnabled(true);
+            ui.actionAdmit_defeat->setEnabled(false);
           });
   connect(tcpSocket, &QTcpSocket::disconnected, this, [this] {
             qDebug() << "Disconnected from server";
@@ -77,6 +80,7 @@ void Chess::setClient() {
               game = nullptr;
             }
             ui.actionStart->setEnabled(false);
+            ui.actionAdmit_defeat->setEnabled(false);
           });
   connect(tcpSocket, &QTcpSocket::readyRead, this, &Chess::read);
 
