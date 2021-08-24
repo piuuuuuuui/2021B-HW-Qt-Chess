@@ -19,7 +19,6 @@ private:
   Ui::ChessClass ui;
   QTcpServer *tcpServer = nullptr;
   QTcpSocket *tcpSocket = nullptr;
-  bool ready = false;
   Game *game = nullptr;
 
   void gameInit();

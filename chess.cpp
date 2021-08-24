@@ -44,12 +44,13 @@ void Chess::setServer() {
                         delete game;
                         game = nullptr;
                       }
-                      ready = false;
                       ui.actionStart->setEnabled(false);
+                      ui.actionAdmit_defeat->setEnabled(false);
                     });
             connect(tcpSocket, &QTcpSocket::readyRead, this, &Chess::read);
             gameInit();
             ui.actionStart->setEnabled(true);
+            ui.actionAdmit_defeat->setEnabled(false);
           });
 
   // start listening
@@ -70,6 +71,7 @@ void Chess::setClient() {
             qDebug() << "Connected to server";
             gameInit();
             ui.actionStart->setEnabled(true);
+            ui.actionAdmit_defeat->setEnabled(false);
           });
   connect(tcpSocket, &QTcpSocket::disconnected, this, [this] {
             qDebug() << "Disconnected from server";
@@ -77,8 +79,8 @@ void Chess::setClient() {
               delete game;
               game = nullptr;
             }
-            ready = false;
             ui.actionStart->setEnabled(false);
+            ui.actionAdmit_defeat->setEnabled(false);
           });
   connect(tcpSocket, &QTcpSocket::readyRead, this, &Chess::read);
 
@@ -108,7 +110,6 @@ void Chess::disconnect() {
 
 void Chess::gameStart() {
   qDebug() << "Game start";
-  ready = true;
   ui.actionStart->setEnabled(false);
   ui.actionAdmit_defeat->setEnabled(false);
   srand((unsigned)(new char));
@@ -123,7 +124,6 @@ void Chess::gameStart() {
 }
 
 void Chess::gameOver() {
-  ready = false;
   ui.actionStart->setEnabled(true);
   ui.actionAdmit_defeat->setEnabled(false);
   qDebug() << "Game over";
@@ -141,7 +141,8 @@ void Chess::read() {
     game->clickOn(59 - msg.sliced(6).toInt());
     return;
   }
-  if (msg.first(6) == "Start " && ready) {
+  if (msg.first(6) == "Start ") {
+    qDebug() << "Game start";
     ui.actionStart->setEnabled(false);
     ui.actionAdmit_defeat->setEnabled(false);
     game->start(msg.sliced(12).toUInt(), msg.sliced(6, 5) == "first");
