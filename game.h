@@ -14,6 +14,7 @@ class Game : public QWidget {
 public:
   Game(QWidget *parent = nullptr);
   ~Game();
+  void clickOn(int);
 
 protected:
   void paintEvent(QPaintEvent *);
@@ -60,6 +61,7 @@ public slots:
   void lose();
 
 signals:
+  void clicked(int);
   void enableSurrender(bool);
   void over();
 };

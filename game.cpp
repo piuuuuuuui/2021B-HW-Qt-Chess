@@ -88,6 +88,13 @@ Game::~Game() {
   for (auto p : pieces) delete p;
 }
 
+void Game::clickOn(int i) {
+  if (focus == -1)
+    focusOn(i);
+  else
+    moveFromTo(focus, i);
+}
+
 void Game::paintEvent(QPaintEvent *event) {
   QPainter p(this);
   p.setTransform(rot);
@@ -99,10 +106,8 @@ void Game::mousePressEvent(QMouseEvent *event) {
   if (event->button() == Qt::MouseButton::LeftButton)
     for (int i = grids.size(); i--; )
       if (grids[i].contains(event->pos())) {
-        if (focus == -1)
-          focusOn(i);
-        else
-          moveFromTo(focus, i);
+        emit clicked(i);
+        clickOn(i);
         return;
       }
   focusOff();
