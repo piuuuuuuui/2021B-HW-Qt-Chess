@@ -22,7 +22,6 @@ private:
   bool ready = false;
   Game *game = nullptr;
 
-  void setMenubar(bool);
   void gameInit();
 
 public slots:

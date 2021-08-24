@@ -37,6 +37,7 @@ private:
   QTransform rot;
   std::vector<QLabel *> pieces;
   // runtime variables
+  COLOR color = NO, tmp = NO;
   bool available = false;
   int round;
   int focus;
@@ -56,12 +57,13 @@ private:
   bool isAttackable(STATUS, STATUS);
 
 public slots:
-  void start();
+  void start(unsigned, bool);
   void win();
   void lose();
 
 signals:
+  void setColor(COLOR);
   void clicked(int);
-  void enableSurrender(bool);
+  void enableResign(bool);
   void over();
 };
