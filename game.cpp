@@ -1,5 +1,4 @@
 #include <random>
-#include <QStyle>
 #include "game.h"
 
 Game::Game(QWidget *parent)
@@ -212,14 +211,9 @@ void Game::moveFromTo(int f, int t) {
   // post-check
   if (ts == RM) { numOfRM--; return; }
   if (ts == BM) { numOfBM--; return; }
-  if (ts == RF) {
-    if (color == BLUE) win();
-    else lose();
-  }
-  if (ts == BF) {
-    if (color == RED) win();
-    else lose();
-  }
+  if (ts == RF && color == RED ||
+      ts == BF && color == BLUE)
+    lose();
 }
 
 void Game::updateRound() {
@@ -313,7 +307,6 @@ void Game::start(unsigned seed, bool first) {
 void Game::win() {
   available = false;
   qDebug() << "You Win";
-  emit over();
 }
 
 void Game::lose() {

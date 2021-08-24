@@ -22,7 +22,7 @@ void Chess::gameInit() {
   game->setGeometry(0, -100, 441, 614);
   game->show();
   connect(game, &Game::clicked, this, [&](int i) {
-            QString msg = QString("Click %1").arg(i);
+            QString msg = QString("Click %1").arg(59 - i);
             tcpSocket->write(QString(msg).toUtf8());
             tcpSocket->flush();
           });
@@ -132,13 +132,15 @@ void Chess::gameStart() {
 void Chess::gameOver() {
   ui.actionStart->setEnabled(true);
   ui.actionAdmit_defeat->setEnabled(false);
-  qDebug() << "Game over";
+  tcpSocket->write(QString("You Win").toUtf8());
+  tcpSocket->flush();
 }
 
 void Chess::read() {
   const QString msg = QString::fromUtf8(tcpSocket->readAll());
   if (msg.first(5) == "Click") {
-    game->clickOn(59 - msg.sliced(6).toInt());
+    qDebug() << msg;
+    game->clickOn(msg.sliced(6).toInt());
     return;
   }
   if (msg.first(5) == "Start") {
@@ -147,5 +149,10 @@ void Chess::read() {
     ui.actionAdmit_defeat->setEnabled(false);
     game->start(msg.sliced(12).toUInt(), msg.sliced(6, 5) == "first");
     return;
+  }
+  if (msg == "You Win") {
+    ui.actionStart->setEnabled(true);
+    ui.actionAdmit_defeat->setEnabled(false);
+    game->win();
   }
 }
