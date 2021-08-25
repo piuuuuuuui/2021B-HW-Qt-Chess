@@ -1,5 +1,7 @@
 #include <random>
+#include <QNetworkInterface>
 #include "chess.h"
+#include "dialog.h"
 
 Chess::Chess(QWidget *parent) : QMainWindow(parent) {
   ui.setupUi(this);
@@ -37,6 +39,22 @@ void Chess::gameInit() {
 }
 
 void Chess::setServer() {
+  QDialog *hostIP = new QDialog(this);
+  hostIP->setModal(true);
+  hostIP->setWindowTitle("Host IP");
+  hostIP->setFixedSize(161, 60);
+  QLabel *info1 = new QLabel("Server created", hostIP);
+  info1->setGeometry(10, 10, 141, 20);
+  QHostAddress localhost = QHostAddress::LocalHost;
+  for (auto ip : QNetworkInterface::allAddresses())
+    if (ip != localhost && ip.toIPv4Address()) {
+      localhost = ip;
+      break;
+    }
+  QLabel *info2 = new QLabel("Your IP: " + localhost.toString(), hostIP);
+  info2->setGeometry(10, 30, 141, 20);
+  hostIP->exec();
+
   // init server
   tcpServer = new QTcpServer();
   connect(tcpServer, &QTcpServer::newConnection, this, [&]() {
@@ -44,10 +62,14 @@ void Chess::setServer() {
               tcpServer->nextPendingConnection()->close();
               return;
             }
-            qDebug() << "Connected to client";
+            setWindowTitle(QString("%1 [%2]")
+                           .arg("Chess")
+                           .arg("Connected to client"));
             tcpSocket = tcpServer->nextPendingConnection();
             connect(tcpSocket, &QTcpSocket::disconnected, this, [&]() {
-                      qDebug() << "Disconnected from client";
+                      setWindowTitle(QString("%1 [%2]")
+                                     .arg("Chess")
+                                     .arg("Disconnected from client"));
                       tcpSocket->deleteLater();
                       tcpSocket = nullptr;
                       if (game) {
@@ -65,10 +87,14 @@ void Chess::setServer() {
 
   // start listening
   if (!tcpServer->listen(QHostAddress::Any, 514)) {
-    qDebug() << "Failed to listen";
+    setWindowTitle(QString("%1 [%2]")
+                   .arg("Chess")
+                   .arg("Failed to listen"));
     return;
   }
-  qDebug() << "Listening";
+  setWindowTitle(QString("%1 [%2]")
+                 .arg("Chess")
+                 .arg("Listening"));
   ui.actionCreate_the_connection->setEnabled(false);
   ui.actionConnect_to_server->setEnabled(false);
   ui.actionDisconnect->setEnabled(true);
@@ -76,30 +102,38 @@ void Chess::setServer() {
 
 void Chess::setClient() {
   // input host address
-  bool ok = false;
-  QHostAddress host;
-  QString address = QInputDialog::getText(this,
-                                          "Connect to server",
-                                          "Host address:",
-                                          QLineEdit::Normal,
-                                          "127.0.0.1",
-                                          &ok);
-  if (!ok) return;
-  if (address.isEmpty() || !host.setAddress(address)) {
-    QMessageBox::warning(this, tr("Warning"), tr("Wrong host address!"), QMessageBox::Ok);
-    return;
-  }
+  QHostAddress host = QHostAddress::Null;
+  Dialog *inputHostAddress = new Dialog(this);
+  connect(inputHostAddress, &Dialog::getIP, this, [&](QString ip) {
+            inputHostAddress->deleteLater();
+            if (ip.isEmpty() || !host.setAddress(ip)) {
+              QDialog *warning = new QDialog(this);
+              warning->setModal(true);
+              warning->setWindowTitle("Warning");
+              warning->setFixedSize(161, 40);
+              QLabel *info = new QLabel("Invalid IP", warning);
+              info->setGeometry(10, 10, 141, 20);
+              warning->exec();
+            }
+          });
+  inputHostAddress->exec();
+
+  if (host == QHostAddress::Null) return;
 
   // init client
   tcpSocket = new QTcpSocket();
   connect(tcpSocket, &QTcpSocket::connected, this, [&]() {
-            qDebug() << "Connected to server";
+            setWindowTitle(QString("%1 [%2]")
+                           .arg("Chess")
+                           .arg("Connected to server"));
             gameInit();
             ui.actionStart->setEnabled(true);
             ui.actionAdmit_defeat->setEnabled(false);
           });
   connect(tcpSocket, &QTcpSocket::disconnected, this, [&]() {
-            qDebug() << "Disconnected from server";
+            setWindowTitle(QString("%1 [%2]")
+                           .arg("Chess")
+                           .arg("Disconnected from server"));
             tcpSocket->deleteLater();
             tcpSocket = nullptr;
             if (game) {
@@ -112,8 +146,10 @@ void Chess::setClient() {
   connect(tcpSocket, &QTcpSocket::readyRead, this, &Chess::read);
 
   // start connecting
-  tcpSocket->connectToHost(QHostAddress::LocalHost, 514);
-  qDebug() << "Connecting";
+  tcpSocket->connectToHost(host, 514);
+  setWindowTitle(QString("%1 [%2]")
+                 .arg("Chess")
+                 .arg("Connecting"));
   ui.actionCreate_the_connection->setEnabled(false);
   ui.actionConnect_to_server->setEnabled(false);
   ui.actionDisconnect->setEnabled(true);
@@ -136,7 +172,7 @@ void Chess::disconnect() {
 }
 
 void Chess::gameStart() {
-  qDebug() << "Game start";
+  setWindowTitle("Chess");
   ui.actionStart->setEnabled(false);
   ui.actionAdmit_defeat->setEnabled(false);
   unsigned seed = std::random_device{}();
@@ -158,7 +194,6 @@ void Chess::gameOver() {
 
 void Chess::read() {
   const QString msg = QString::fromUtf8(tcpSocket->readAll());
-  qDebug() << msg;
   if (msg.first(5) == "Click") {
     game->clickOn(msg.last(2).toInt());
     return;

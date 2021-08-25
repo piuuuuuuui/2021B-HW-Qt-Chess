@@ -95,6 +95,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dialog.cpp" />
     <ClCompile Include="timer.cpp" />
     <QtRcc Include="chess.qrc" />
     <QtUic Include="chess.ui" />
@@ -103,11 +104,13 @@
     <ClCompile Include="game.cpp" />
     <ClCompile Include="grid.cpp" />
     <ClCompile Include="main.cpp" />
+    <QtUic Include="dialog.ui" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="game.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="dialog.h" />
     <ClInclude Include="grid.h" />
     <QtMoc Include="timer.h" />
   </ItemGroup>

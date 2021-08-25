@@ -12,7 +12,7 @@ class Chess : public QMainWindow {
   Q_OBJECT
 
 public:
-  Chess(QWidget *parent = nullptr);
+  explicit Chess(QWidget *parent = nullptr);
 
 protected:
   void paintEvent(QPaintEvent *);
