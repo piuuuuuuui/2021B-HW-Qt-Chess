@@ -325,11 +325,13 @@ void Game::start(unsigned seed, bool first) {
 
 void Game::win() {
   available = false;
+  delete timer;
   qDebug() << "You Win";
 }
 
 void Game::lose() {
   available = false;
+  delete timer;
   qDebug() << "You Lose";
   emit over();
 }
