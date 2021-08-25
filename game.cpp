@@ -229,9 +229,9 @@ void Game::updateRound(bool isTimeOver) {
 
   // set timer
   if (available)
-    timer->setGeometry(0, 600, 441, 100);
+    timer->setGeometry(20, 640, 401, 100);
   else
-    timer->setGeometry(50, 200, 341, 100);
+    timer->setGeometry(60, 160, 321, 100);
   timer->start();
 }
 

@@ -19,7 +19,7 @@ void Chess::paintEvent(QPaintEvent *event) {
 
 void Chess::gameInit() {
   game = new Game(centralWidget());
-  game->setGeometry(0, -100, 441, 614);
+  game->setGeometry(0, -100, 441, 714);
   game->show();
   connect(game, &Game::clicked, this, [&](int i) {
             QString msg = QString("Click %1").arg(59 - i);
