@@ -1,4 +1,5 @@
 #include <random>
+#include <QDialog>
 #include "game.h"
 
 Game::Game(QWidget *parent)
@@ -327,12 +328,26 @@ void Game::start(unsigned seed, bool first) {
 void Game::win() {
   available = false;
   timer->deleteLater();
-  qDebug() << "You Win";
+  QDialog *dialog = new QDialog(this);
+  dialog->setModal(true);
+  dialog->setWindowTitle("Game Over");
+  dialog->setFixedSize(161, 40);
+  QLabel *info = new QLabel("You win", dialog);
+  info->setGeometry(10, 10, 141, 20);
+  dialog->exec();
+  this->deleteLater();
 }
 
 void Game::lose() {
   available = false;
   timer->deleteLater();
-  qDebug() << "You Lose";
   emit over();
+  QDialog *dialog = new QDialog(this);
+  dialog->setModal(true);
+  dialog->setWindowTitle("Game Over");
+  dialog->setFixedSize(161, 40);
+  QLabel *info = new QLabel("You lose", dialog);
+  info->setGeometry(10, 10, 141, 20);
+  dialog->exec();
+  this->deleteLater();
 }
