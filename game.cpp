@@ -72,11 +72,52 @@ Game::Game(QWidget *parent)
         /*RM*/ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         /*BM*/ {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
       }) {
+  // set viewpoint
   rot.translate(220, 600);
   rot.rotate(30, Qt::XAxis);
   rot.translate(-220, -600);
-  setGrids();
-  setAdjacent();
+
+  // initialize grids
+  for (int i = 0; i < 6; i++)
+    for (int j = 0; j < 5; j++) {
+      QLine bottom = rot.map(QLine(j * 94 + 5, i * 44 + 27, j * 94 + 32, i * 44 + 27));
+      grids.push_back(QRect(
+        bottom.x1(),
+        bottom.y1() - bottom.dx(),
+        bottom.dx() * 2,
+        bottom.dx()
+      ));
+    }
+  for (int i = 0; i < 6; i++)
+    for (int j = 0; j < 5; j++) {
+      QLine bottom = rot.map(QLine(j * 94 + 5, i * 44 + 387, j * 94 + 32, i * 44 + 387));
+      grids.push_back(QRect(
+        bottom.x1(),
+        bottom.y1() - bottom.dx(),
+        bottom.dx() * 2,
+        bottom.dx()
+      ));
+    }
+
+  // initialize adjacent table
+  adjacent.resize(60);
+  for (auto &adj : adjacent) adj.assign(60, false);
+  for (int i = 0; i < 60; i++) {
+    if (i >= 5) adjacent[i][i - 5] = true;     // up
+    if (i < 55) adjacent[i][i + 5] = true;     // down
+    if (i % 5 != 0) adjacent[i][i - 1] = true; // left
+    if (i % 5 != 4) adjacent[i][i + 1] = true; // right
+  }
+  for (int i : camps) {
+    adjacent[i][i - 6] = adjacent[i - 6][i] =
+    adjacent[i][i - 4] = adjacent[i - 4][i] =
+    adjacent[i][i + 4] = adjacent[i + 4][i] =
+    adjacent[i][i + 6] = adjacent[i + 6][i] = true;
+  }
+  adjacent[26][31] = adjacent[31][26] =
+  adjacent[28][33] = adjacent[33][28] = false;
+
+  // initialize pieces
   for (int i = 0; i < 60; i++){
     pieces.push_back(new QLabel(this));
     pieces[i]->setGeometry(grids[i]);
@@ -117,48 +158,6 @@ void Game::mousePressEvent(QMouseEvent *event) {
   }
 }
 
-void Game::setGrids() {
-  for (int i = 0; i < 6; i++)
-    for (int j = 0; j < 5; j++) {
-      QLine bottom = rot.map(QLine(j * 94 + 5, i * 44 + 27, j * 94 + 32, i * 44 + 27));
-      grids.push_back(QRect(
-        bottom.x1(),
-        bottom.y1() - bottom.dx(),
-        bottom.dx() * 2,
-        bottom.dx()
-      ));
-    }
-  for (int i = 0; i < 6; i++)
-    for (int j = 0; j < 5; j++) {
-      QLine bottom = rot.map(QLine(j * 94 + 5, i * 44 + 387, j * 94 + 32, i * 44 + 387));
-      grids.push_back(QRect(
-        bottom.x1(),
-        bottom.y1() - bottom.dx(),
-        bottom.dx() * 2,
-        bottom.dx()
-      ));
-    }
-}
-
-void Game::setAdjacent() {
-  adjacent.resize(60);
-  for (auto &adj : adjacent) adj.assign(60, false);
-  for (int i = 0; i < 60; i++) {
-    if (i >= 5) adjacent[i][i - 5] = true;     // up
-    if (i < 55) adjacent[i][i + 5] = true;     // down
-    if (i % 5 != 0) adjacent[i][i - 1] = true; // left
-    if (i % 5 != 4) adjacent[i][i + 1] = true; // right
-  }
-  for (int i : camps) {
-    adjacent[i][i - 6] = adjacent[i - 6][i] =
-    adjacent[i][i - 4] = adjacent[i - 4][i] =
-    adjacent[i][i + 4] = adjacent[i + 4][i] =
-    adjacent[i][i + 6] = adjacent[i + 6][i] = true;
-  }
-  adjacent[26][31] = adjacent[31][26] =
-  adjacent[28][33] = adjacent[33][28] = false;
-}
-
 void Game::setStatus(int i, STATUS s) {
   grids[i].stat = s;
   if (s == EMPTY) {
@@ -182,7 +181,7 @@ void Game::focusOn(int f) {
         last1 = grids[f].getColor();
       }
     }
-    updateRound();
+    updateRound(false);
     return;
   }
   if (color == NO || color == available ^ grids[f].getColor()) return;
@@ -215,7 +214,7 @@ void Game::moveFromTo(int f, int t) {
   } else {
     setStatus(t, fs);
   }
-  updateRound();
+  updateRound(false);
 
   // post-check
   if (ts == RM) numOfRM--;
@@ -223,10 +222,24 @@ void Game::moveFromTo(int f, int t) {
   if (ts == RF || ts == BF) win();
 }
 
-void Game::updateRound() {
+void Game::updateRound(bool isTimeOver) {
   qDebug() << "Round" << ++round;
+  if (available) {
+    if (isTimeOver) {
+      if (++timeOver == 3) lose();
+    } else {
+      timeOver = 0;
+    }
+  }
   available = !available; // exchange control
   if (round == 20) emit enableResign(true);
+
+  // set timer
+  if (available)
+    timer->setGeometry(0, 600, 441, 100);
+  else
+    timer->setGeometry(50, 200, 341, 100);
+  timer->start();
 }
 
 bool Game::isReachable(int a, int b) {
@@ -270,8 +283,9 @@ bool Game::isAttackable(STATUS a, STATUS b) {
 }
 
 void Game::start(unsigned seed, bool first) {
-  available = first;
+  available = !first;
   round = 0;
+  timeOver = 0;
   focus = -1; // defocus
   numOfRM = 3;
   numOfBM = 3;
@@ -309,6 +323,11 @@ void Game::start(unsigned seed, bool first) {
   for (int i : camps)
     initStatus.insert(initStatus.begin() + i, EMPTY);
   if (first) std::reverse(initStatus.begin(), initStatus.end());
+
+  timer = new Timer(this);
+  connect(timer, &Timer::timeOver, this, [&]() { updateRound(true); });
+  timer->show();
+  updateRound(false);
 }
 
 void Game::win() {

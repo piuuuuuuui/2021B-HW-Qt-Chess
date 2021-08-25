@@ -6,6 +6,7 @@
 #include <QPainter>
 #include <QMouseEvent>
 #include "grid.h"
+#include "timer.h"
 
 class Game : public QWidget {
 
@@ -36,23 +37,22 @@ private:
   // display
   QTransform rot;
   std::vector<QLabel *> pieces;
+  Timer *timer;
   // runtime variables
   COLOR color = NO, last1 = NO, last2 = NO;
   bool available = false;
   int round;
+  int timeOver;
   int focus;
   int numOfRM;
   int numOfBM;
 
-  // initialize
-  void setGrids();
-  void setAdjacent();
   // other
   void setStatus(int, STATUS);
   void focusOn(int);
   void focusOff();
   void moveFromTo(int, int);
-  void updateRound();
+  void updateRound(bool);
   bool isReachable(int, int);
   bool isAttackable(STATUS, STATUS);
 

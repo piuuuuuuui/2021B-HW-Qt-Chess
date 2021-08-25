@@ -46,9 +46,15 @@
     <ClCompile Include="grid.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="timer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="game.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="timer.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
