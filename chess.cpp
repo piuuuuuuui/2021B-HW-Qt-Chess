@@ -42,9 +42,7 @@ void Chess::setServer() {
   QDialog *hostIP = new QDialog(this);
   hostIP->setModal(true);
   hostIP->setWindowTitle("Host IP");
-  hostIP->setFixedSize(161, 60);
-  QLabel *info1 = new QLabel("Server created", hostIP);
-  info1->setGeometry(10, 10, 141, 20);
+  hostIP->setFixedSize(161, 40);
   QHostAddress localhost = QHostAddress::LocalHost;
   for (auto ip : QNetworkInterface::allAddresses())
     if (ip != localhost && ip.toIPv4Address()) {
@@ -52,7 +50,7 @@ void Chess::setServer() {
       break;
     }
   QLabel *info2 = new QLabel("Your IP: " + localhost.toString(), hostIP);
-  info2->setGeometry(10, 30, 141, 20);
+  info2->setGeometry(10, 10, 141, 20);
   hostIP->exec();
 
   // init server
@@ -204,6 +202,7 @@ void Chess::read() {
     return;
   }
   if (msg.first(5) == "Start") {
+    setWindowTitle("Chess");
     ui.actionStart->setEnabled(false);
     ui.actionAdmit_defeat->setEnabled(false);
     game->start(msg.sliced(12).toUInt(), msg.sliced(6, 5) == "first");

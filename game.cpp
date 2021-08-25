@@ -143,8 +143,10 @@ void Game::updateRound(bool isTimeOver) {
   if (round == 20) emit enableResign(true);
   available = !available; // switch control
   if (available) {
-    timer->setGeometry(20, 640, 400, 20);
-    timer->start(color);
+    if (timer) {
+      timer->setGeometry(20, 640, 400, 20);
+      timer->start(color);
+    }
     for (auto grid : grids) {
       if (grid.stat == UNKNOWN || grid.getColor() == color && grid.stat < RM)
         return;
@@ -152,13 +154,17 @@ void Game::updateRound(bool isTimeOver) {
     lose();
   } else {
     if (isTimeOver) {
-      if (++timeOver == 3) lose();
-      emit switched();
+      if (++timeOver == 3)
+        lose();
+      else
+        emit switched();
     } else {
       timeOver = 0;
     }
-    timer->setGeometry(70, 160, 300, 10);
-    timer->start(1 - color);
+    if (timer) {
+      timer->setGeometry(70, 160, 300, 10);
+      timer->start(1 - color);
+    }
   }
 }
 
@@ -333,6 +339,7 @@ void Game::start(unsigned seed, bool first) {
 void Game::win() {
   available = false;
   timer->deleteLater();
+  timer = nullptr;
   QDialog *dialog = new QDialog(this);
   dialog->setModal(true);
   dialog->setWindowTitle("Game Over");
@@ -345,6 +352,7 @@ void Game::win() {
 void Game::lose() {
   available = false;
   timer->deleteLater();
+  timer = nullptr;
   emit over();
   QDialog *dialog = new QDialog(this);
   dialog->setModal(true);

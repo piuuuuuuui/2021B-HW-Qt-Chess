@@ -4,8 +4,9 @@ Timer::Timer(QWidget *parent)
     : QWidget(parent),
       timer(new QTimer(this)) {
   connect(timer, &QTimer::timeout, this, [&]() {
-            if (--timeSec == 0) emit timeOver();
+            timeSec--;
             update();
+            if (timeSec == 0) emit timeOver();
           });
 }
 
