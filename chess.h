@@ -1,5 +1,7 @@
 #pragma once
 #include <QtWidgets/QMainWindow>
+#include <QInputDialog>
+#include <QMessageBox>
 #include <QTcpServer>
 #include <QTcpSocket>
 #include "ui_chess.h"

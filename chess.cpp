@@ -64,7 +64,7 @@ void Chess::setServer() {
           });
 
   // start listening
-  if (!tcpServer->listen(QHostAddress::LocalHost, 8080)) {
+  if (!tcpServer->listen(QHostAddress::Any, 514)) {
     qDebug() << "Failed to listen";
     return;
   }
@@ -75,6 +75,21 @@ void Chess::setServer() {
 }
 
 void Chess::setClient() {
+  // input host address
+  bool ok = false;
+  QHostAddress host;
+  QString address = QInputDialog::getText(this,
+                                          "Connect to server",
+                                          "Host address:",
+                                          QLineEdit::Normal,
+                                          "127.0.0.1",
+                                          &ok);
+  if (!ok) return;
+  if (address.isEmpty() || !host.setAddress(address)) {
+    QMessageBox::warning(this, tr("Warning"), tr("Wrong host address!"), QMessageBox::Ok);
+    return;
+  }
+
   // init client
   tcpSocket = new QTcpSocket();
   connect(tcpSocket, &QTcpSocket::connected, this, [&]() {
@@ -97,7 +112,7 @@ void Chess::setClient() {
   connect(tcpSocket, &QTcpSocket::readyRead, this, &Chess::read);
 
   // start connecting
-  tcpSocket->connectToHost(QHostAddress::LocalHost, 8080);
+  tcpSocket->connectToHost(QHostAddress::LocalHost, 514);
   qDebug() << "Connecting";
   ui.actionCreate_the_connection->setEnabled(false);
   ui.actionConnect_to_server->setEnabled(false);
