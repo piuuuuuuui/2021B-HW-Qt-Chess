@@ -1,5 +1,4 @@
 #include <random>
-#include <QStyle>
 #include "game.h"
 
 Game::Game(QWidget *parent)
@@ -147,12 +146,10 @@ void Game::paintEvent(QPaintEvent *event) {
 void Game::mousePressEvent(QMouseEvent *event) {
   if (!available) return;
   if (event->button() == Qt::MouseButton::LeftButton) {
-    int i = 0;
-    for (; i < 60; i++) {
-      if (grids[i].contains(event->pos())) {
+    int i = 60;
+    while (--i >= 0)
+      if (grids[i].contains(event->pos()))
         break;
-      }
-    }
     emit clicked(i);
     clickOn(i);
   }
@@ -172,11 +169,11 @@ void Game::focusOn(int f) {
   if (grids[f].stat == EMPTY) return;
   if (grids[f].stat == UNKNOWN) {
     setStatus(f, initStatus[f]);
-    if (color == NO) {
-      if (grids[f].getColor() == last2) {
+    if (color == NO) { // color undetermined
+      if (grids[f].getColor() == last2) { // determine color
         color = COLOR(!available ^ grids[f].getColor());
         qDebug() << (color ? "BLUE" : "RED");
-      } else {
+      } else { // remain undetermined
         last2 = last1;
         last1 = grids[f].getColor();
       }
@@ -200,26 +197,22 @@ void Game::moveFromTo(int f, int t) {
 
   // check moveability
   STATUS fs = grids[f].stat, ts = grids[t].stat;
-  if (!isReachable(f, t) ||
-      !isAttackable(fs, ts))
-    return;
+  if (!isReachable(f, t) || !isAttackable(fs, ts)) return;
 
   // execute
   setStatus(f, EMPTY);
-  if ((fs ^ ts) == 1 ||
-      ts != EMPTY && (
-        fs == RB ||
-        fs == BB)) {
+  if ((fs ^ ts) == 1 || ts != EMPTY && (fs == RB || fs == BB))
     setStatus(t, EMPTY);
-  } else {
+  else
     setStatus(t, fs);
-  }
   updateRound(false);
 
   // post-check
-  if (ts == RM) numOfRM--;
-  if (ts == BM) numOfBM--;
-  if (ts == RF || ts == BF) win();
+  if (ts == RM) { numOfRM--; return; }
+  if (ts == BM) { numOfBM--; return; }
+  if (ts == RF && color == RED ||
+      ts == BF && color == BLUE)
+    lose();
 }
 
 void Game::updateRound(bool isTimeOver) {
@@ -333,7 +326,6 @@ void Game::start(unsigned seed, bool first) {
 void Game::win() {
   available = false;
   qDebug() << "You Win";
-  emit over();
 }
 
 void Game::lose() {

@@ -21,7 +21,11 @@ void Chess::gameInit() {
   game = new Game(centralWidget());
   game->setGeometry(0, -100, 441, 614);
   game->show();
-  connect(game, &Game::clicked, this, &Chess::writeClick);
+  connect(game, &Game::clicked, this, [&](int i) {
+            QString msg = QString("Click %1").arg(59 - i);
+            tcpSocket->write(QString(msg).toUtf8());
+            tcpSocket->flush();
+          });
   connect(game, &Game::over, this, &Chess::gameOver);
   connect(game, &Game::enableResign, ui.actionAdmit_defeat, &QAction::setEnabled);
   connect(ui.actionAdmit_defeat, &QAction::triggered, game, &Game::lose);
@@ -30,16 +34,17 @@ void Chess::gameInit() {
 void Chess::setServer() {
   // init server
   tcpServer = new QTcpServer();
-  connect(tcpServer, &QTcpServer::newConnection, this, [this] {
+  connect(tcpServer, &QTcpServer::newConnection, this, [&]() {
             if (tcpSocket) { // connection exists
-              tcpServer->nextPendingConnection()->abort();
+              tcpServer->nextPendingConnection()->close();
               return;
             }
-
             qDebug() << "Connected to client";
             tcpSocket = tcpServer->nextPendingConnection();
-            connect(tcpSocket, &QTcpSocket::disconnected, this, [this] {
+            connect(tcpSocket, &QTcpSocket::disconnected, this, [&]() {
                       qDebug() << "Disconnected from client";
+                      tcpSocket->deleteLater();
+                      tcpSocket = nullptr;
                       if (game) {
                         delete game;
                         game = nullptr;
@@ -67,14 +72,16 @@ void Chess::setServer() {
 void Chess::setClient() {
   // init client
   tcpSocket = new QTcpSocket();
-  connect(tcpSocket, &QTcpSocket::connected, this, [this] {
+  connect(tcpSocket, &QTcpSocket::connected, this, [&]() {
             qDebug() << "Connected to server";
             gameInit();
             ui.actionStart->setEnabled(true);
             ui.actionAdmit_defeat->setEnabled(false);
           });
-  connect(tcpSocket, &QTcpSocket::disconnected, this, [this] {
+  connect(tcpSocket, &QTcpSocket::disconnected, this, [&]() {
             qDebug() << "Disconnected from server";
+            tcpSocket->deleteLater();
+            tcpSocket = nullptr;
             if (game) {
               delete game;
               game = nullptr;
@@ -112,9 +119,8 @@ void Chess::gameStart() {
   qDebug() << "Game start";
   ui.actionStart->setEnabled(false);
   ui.actionAdmit_defeat->setEnabled(false);
-  srand((unsigned)(new char));
-  unsigned seed = rand();
-  bool first = rand() & 1;
+  unsigned seed = std::random_device{}();
+  bool first = std::random_device{}() & 1;
   QString msg = QString("Start %1 %2")
                 .arg(first ? "next " : "first")
                 .arg(seed);
@@ -126,25 +132,27 @@ void Chess::gameStart() {
 void Chess::gameOver() {
   ui.actionStart->setEnabled(true);
   ui.actionAdmit_defeat->setEnabled(false);
-  qDebug() << "Game over";
-}
-
-void Chess::writeClick(int i) {
-  QString msg = QString("Click %1").arg(i);
-  tcpSocket->write(QString(msg).toUtf8());
+  tcpSocket->write(QString("You Win").toUtf8());
   tcpSocket->flush();
 }
 
 void Chess::read() {
   const QString msg = QString::fromUtf8(tcpSocket->readAll());
-  if (msg.first(6) == "Click ") {
-    game->clickOn(59 - msg.sliced(6).toInt());
+  if (msg.first(5) == "Click") {
+    qDebug() << msg;
+    game->clickOn(msg.sliced(6).toInt());
     return;
   }
-  if (msg.first(6) == "Start ") {
+  if (msg.first(5) == "Start") {
     qDebug() << "Game start";
     ui.actionStart->setEnabled(false);
     ui.actionAdmit_defeat->setEnabled(false);
     game->start(msg.sliced(12).toUInt(), msg.sliced(6, 5) == "first");
+    return;
+  }
+  if (msg == "You Win") {
+    ui.actionStart->setEnabled(true);
+    ui.actionAdmit_defeat->setEnabled(false);
+    game->win();
   }
 }

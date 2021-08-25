@@ -20,7 +20,6 @@ private:
   QTcpServer *tcpServer = nullptr;
   QTcpSocket *tcpSocket = nullptr;
   Game *game = nullptr;
-
   void gameInit();
 
 public slots:
@@ -29,6 +28,5 @@ public slots:
   void disconnect();
   void gameStart();
   void gameOver();
-  void writeClick(int);
   void read();
 };
