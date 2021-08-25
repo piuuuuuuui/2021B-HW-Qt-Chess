@@ -9,13 +9,14 @@ class Timer : public QWidget {
 
 public:
   Timer(QWidget *parent = nullptr);
-  void start();
+  void start(int color = 2);
 
 protected:
   void paintEvent(QPaintEvent *);
 
 private:
-  int sec;
+  int timeSec;
+  Qt::GlobalColor frontColor, backColor;
   QTimer *timer;
 
 signals:

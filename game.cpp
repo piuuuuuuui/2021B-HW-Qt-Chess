@@ -142,7 +142,8 @@ void Game::updateRound(bool isTimeOver) {
   if (round == 20) emit enableResign(true);
   available = !available; // switch control
   if (available) {
-    timer->setGeometry(20, 640, 401, 100);
+    timer->setGeometry(20, 640, 400, 20);
+    timer->start(color);
   } else {
     if (isTimeOver) {
       if (++timeOver == 3) lose();
@@ -150,9 +151,9 @@ void Game::updateRound(bool isTimeOver) {
     } else {
       timeOver = 0;
     }
-    timer->setGeometry(60, 160, 321, 100);
+    timer->setGeometry(70, 160, 300, 10);
+    timer->start(1 - color);
   }
-  timer->start();
 }
 
 void Game::paintEvent(QPaintEvent *event) {
