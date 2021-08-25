@@ -46,7 +46,7 @@ void Chess::setServer() {
                       tcpSocket->deleteLater();
                       tcpSocket = nullptr;
                       if (game) {
-                        delete game;
+                        game->deleteLater();
                         game = nullptr;
                       }
                       ui.actionStart->setEnabled(false);
@@ -83,7 +83,7 @@ void Chess::setClient() {
             tcpSocket->deleteLater();
             tcpSocket = nullptr;
             if (game) {
-              delete game;
+              game->deleteLater();
               game = nullptr;
             }
             ui.actionStart->setEnabled(false);
@@ -102,12 +102,12 @@ void Chess::setClient() {
 void Chess::disconnect() {
   if (tcpSocket) {
     tcpSocket->disconnectFromHost();
-    delete tcpSocket;
+    tcpSocket->deleteLater();
     tcpSocket = nullptr;
   }
   if (tcpServer) {
     tcpServer->close();
-    delete tcpServer;
+    tcpServer->deleteLater();
     tcpServer = nullptr;
   }
   ui.actionCreate_the_connection->setEnabled(true);

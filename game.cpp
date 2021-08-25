@@ -125,7 +125,7 @@ Game::Game(QWidget *parent)
 }
 
 Game::~Game() {
-  for (auto p : pieces) delete p;
+  for (auto p : pieces) p->deleteLater();
 }
 
 void Game::clickOn(int i) {
@@ -325,13 +325,13 @@ void Game::start(unsigned seed, bool first) {
 
 void Game::win() {
   available = false;
-  delete timer;
+  timer->deleteLater();
   qDebug() << "You Win";
 }
 
 void Game::lose() {
   available = false;
-  delete timer;
+  timer->deleteLater();
   qDebug() << "You Lose";
   emit over();
 }
