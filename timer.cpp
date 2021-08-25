@@ -4,8 +4,8 @@ Timer::Timer(QWidget *parent)
     : QWidget(parent),
       timer(new QTimer(this)) {
   connect(timer, &QTimer::timeout, this, [&]() {
-            update();
             if (--sec == 0) emit timeOver();
+            update();
           });
 }
 
@@ -21,5 +21,5 @@ void Timer::paintEvent(QPaintEvent *) {
   p.setPen(QPen(Qt::darkGray, 20));
   p.drawLine(QPointF(0, 0), QPointF(width(), 0));
   p.setPen(QPen(Qt::white, 20));
-  p.drawLine(QPointF(0, 0), QPointF((float)width() * sec / 20, 0));
+  if (sec > 0) p.drawLine(QPointF(0, 0), QPointF((float)width() * sec / 20, 0));
 }

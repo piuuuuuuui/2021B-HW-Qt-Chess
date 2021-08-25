@@ -137,6 +137,24 @@ void Game::clickOn(int i) {
     moveFromTo(focus, i);
 }
 
+void Game::updateRound(bool isTimeOver) {
+  qDebug() << "Round" << ++round;
+  if (round == 20) emit enableResign(true);
+  available = !available; // switch control
+  if (available) {
+    timer->setGeometry(20, 640, 401, 100);
+  } else {
+    if (isTimeOver) {
+      if (++timeOver == 3) lose();
+      emit switched();
+    } else {
+      timeOver = 0;
+    }
+    timer->setGeometry(60, 160, 321, 100);
+  }
+  timer->start();
+}
+
 void Game::paintEvent(QPaintEvent *event) {
   QPainter p(this);
   p.setTransform(rot);
@@ -213,26 +231,6 @@ void Game::moveFromTo(int f, int t) {
   if (ts == RF && color == RED ||
       ts == BF && color == BLUE)
     lose();
-}
-
-void Game::updateRound(bool isTimeOver) {
-  qDebug() << "Round" << ++round;
-  if (available) {
-    if (isTimeOver) {
-      if (++timeOver == 3) lose();
-    } else {
-      timeOver = 0;
-    }
-  }
-  available = !available; // exchange control
-  if (round == 20) emit enableResign(true);
-
-  // set timer
-  if (available)
-    timer->setGeometry(20, 640, 401, 100);
-  else
-    timer->setGeometry(60, 160, 321, 100);
-  timer->start();
 }
 
 bool Game::isReachable(int a, int b) {
@@ -318,7 +316,9 @@ void Game::start(unsigned seed, bool first) {
   if (first) std::reverse(initStatus.begin(), initStatus.end());
 
   timer = new Timer(this);
-  connect(timer, &Timer::timeOver, this, [&]() { updateRound(true); });
+  connect(timer, &Timer::timeOver, this, [&]() {
+            if (available) updateRound(true);
+          });
   timer->show();
   updateRound(false);
 }

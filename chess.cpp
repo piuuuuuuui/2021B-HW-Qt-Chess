@@ -22,7 +22,12 @@ void Chess::gameInit() {
   game->setGeometry(0, -100, 441, 714);
   game->show();
   connect(game, &Game::clicked, this, [&](int i) {
-            QString msg = QString("Click %1").arg(59 - i);
+            QString msg = QString("Click %1").arg(59 - i, 2, 10, QChar('0'));
+            tcpSocket->write(QString(msg).toUtf8());
+            tcpSocket->flush();
+          });
+  connect(game, &Game::switched, this, [&]() {
+            QString msg = QString("Your turn");
             tcpSocket->write(QString(msg).toUtf8());
             tcpSocket->flush();
           });
@@ -132,27 +137,31 @@ void Chess::gameStart() {
 void Chess::gameOver() {
   ui.actionStart->setEnabled(true);
   ui.actionAdmit_defeat->setEnabled(false);
-  tcpSocket->write(QString("You Win").toUtf8());
+  tcpSocket->write(QString("You win").toUtf8());
   tcpSocket->flush();
 }
 
 void Chess::read() {
   const QString msg = QString::fromUtf8(tcpSocket->readAll());
+  qDebug() << msg;
   if (msg.first(5) == "Click") {
-    qDebug() << msg;
-    game->clickOn(msg.sliced(6).toInt());
+    game->clickOn(msg.last(2).toInt());
+    return;
+  }
+  if (msg == "Your turn") {
+    game->updateRound(false);
     return;
   }
   if (msg.first(5) == "Start") {
-    qDebug() << "Game start";
     ui.actionStart->setEnabled(false);
     ui.actionAdmit_defeat->setEnabled(false);
     game->start(msg.sliced(12).toUInt(), msg.sliced(6, 5) == "first");
     return;
   }
-  if (msg == "You Win") {
+  if (msg == "You win") {
     ui.actionStart->setEnabled(true);
     ui.actionAdmit_defeat->setEnabled(false);
     game->win();
+    return;
   }
 }
