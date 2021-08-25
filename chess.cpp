@@ -194,6 +194,7 @@ void Chess::gameOver() {
 
 void Chess::read() {
   const QString msg = QString::fromUtf8(tcpSocket->readAll());
+  qDebug() << msg;
   if (msg.first(5) == "Click") {
     game->clickOn(msg.last(2).toInt());
     return;

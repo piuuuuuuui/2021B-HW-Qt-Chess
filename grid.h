@@ -15,9 +15,9 @@ enum STATUS : int {
   R7, B7, // ShiZhang
   R8, B8, // JunZhang
   R9, B9, // SiLing
-  RF, BF, // Flag
   RB, BB, // Bomb
   RM, BM, // Mine
+  RF, BF, // Flag
 };
 
 enum TYPE : int {STATION, RAILWAY, CAMP};
