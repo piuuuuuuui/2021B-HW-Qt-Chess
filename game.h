@@ -47,8 +47,8 @@ private:
   int numOfRM;
   int numOfBM;
 
-  void updateRound();
   void setStatus(int, STATUS);
+  void updateRound();
   void focusOn(int);
   void focusOff();
   void moveFromTo(int, int);
