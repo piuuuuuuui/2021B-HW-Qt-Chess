@@ -130,42 +130,14 @@ Game::~Game() {
 }
 
 void Game::clickOn(int i) {
-  if (i == -1 || i == 60)
+  if (i == -1)
     focusOff();
+  else if (i == 60)
+    updateRound();
   else if (focus == -1)
     focusOn(i);
   else
     moveFromTo(focus, i);
-}
-
-void Game::updateRound(bool isTimeOver) {
-  qDebug() << "Round" << ++round;
-  if (round == 20) emit enableResign(true);
-  available = !available; // switch control
-  if (available) {
-    if (timer) {
-      timer->setGeometry(20, 640, 400, 20);
-      timer->start(color);
-    }
-    for (auto grid : grids) {
-      if (grid.stat == UNKNOWN || grid.getColor() == color && grid.stat < RM)
-        return;
-    }
-    lose();
-  } else {
-    if (isTimeOver) {
-      if (++timeOver == 3)
-        lose();
-      else
-        emit switched();
-    } else {
-      timeOver = 0;
-    }
-    if (timer) {
-      timer->setGeometry(70, 160, 300, 10);
-      timer->start(1 - color);
-    }
-  }
 }
 
 void Game::paintEvent(QPaintEvent *event) {
@@ -183,6 +155,26 @@ void Game::mousePressEvent(QMouseEvent *event) {
         break;
     emit clicked(i);
     clickOn(i);
+  }
+}
+
+void Game::updateRound() {
+  qDebug() << "Round" << ++round;
+  if (round == 20) emit enableResign(true);
+  focusOff();
+  available = !available; // switch control
+  if (available) {
+    if (timer) {
+      timer->setGeometry(20, 640, 400, 20);
+      timer->start(color);
+    }
+    for (auto grid : grids)
+      if (grid.stat == UNKNOWN || grid.getColor() == color && grid.stat < RM)
+        return;
+    lose();
+  } else if (timer) {
+    timer->setGeometry(70, 160, 300, 10);
+    timer->start(1 - color);
   }
 }
 
@@ -209,7 +201,8 @@ void Game::focusOn(int f) {
         last1 = grids[f].getColor();
       }
     }
-    updateRound(false);
+    if (available) timeOver = 0;
+    updateRound();
     return;
   }
   if (color == NO || color == available ^ grids[f].getColor()) return;
@@ -236,7 +229,8 @@ void Game::moveFromTo(int f, int t) {
     setStatus(t, EMPTY);
   else
     setStatus(t, fs);
-  updateRound(false);
+  if (available) timeOver = 0;
+  updateRound();
 
   // post-check
   if (ts == RM) { numOfRM--; return; }
@@ -331,10 +325,17 @@ void Game::start(unsigned seed, bool first) {
 
   timer = new Timer(this);
   connect(timer, &Timer::timeOver, this, [&]() {
-            if (available) updateRound(true);
+            if (available) {
+              if (++timeOver == 3) {
+                lose();
+              } else {
+                emit clicked(60);
+                updateRound();
+              }
+            }
           });
   timer->show();
-  updateRound(false);
+  updateRound();
 }
 
 void Game::win() {

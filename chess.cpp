@@ -24,12 +24,9 @@ void Chess::gameInit() {
   game->setGeometry(0, -100, 441, 714);
   game->show();
   connect(game, &Game::clicked, this, [&](int i) {
+            if (i == 60) i = -1;
+            else if (i == -1) i = 60;
             QString msg = QString("Click %1").arg(59 - i, 2, 10, QChar('0'));
-            tcpSocket->write(QString(msg).toUtf8());
-            tcpSocket->flush();
-          });
-  connect(game, &Game::switched, this, [&]() {
-            QString msg = QString("Your turn");
             tcpSocket->write(QString(msg).toUtf8());
             tcpSocket->flush();
           });
@@ -195,10 +192,6 @@ void Chess::read() {
   qDebug() << msg;
   if (msg.first(5) == "Click") {
     game->clickOn(msg.last(2).toInt());
-    return;
-  }
-  if (msg == "Your turn") {
-    game->updateRound(false);
     return;
   }
   if (msg.first(5) == "Start") {

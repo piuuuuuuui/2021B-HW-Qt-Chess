@@ -16,7 +16,6 @@ public:
   Game(QWidget *parent = nullptr);
   ~Game();
   void clickOn(int);
-  void updateRound(bool);
 
 protected:
   void paintEvent(QPaintEvent *);
@@ -48,7 +47,7 @@ private:
   int numOfRM;
   int numOfBM;
 
-  // other
+  void updateRound();
   void setStatus(int, STATUS);
   void focusOn(int);
   void focusOff();
@@ -63,7 +62,6 @@ public slots:
 
 signals:
   void clicked(int);
-  void switched();
   void enableResign(bool);
   void over();
 };
