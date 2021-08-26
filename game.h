@@ -40,7 +40,7 @@ private:
   std::vector<QLabel *> pieces;
   Timer *timer;
   // runtime variables
-  COLOR color = NO, last1 = NO, last2 = NO;
+  COLOR color, last1, last2;
   bool available = false;
   int round;
   int timeOver;
