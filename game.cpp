@@ -287,6 +287,7 @@ bool Game::isAttackable(STATUS a, STATUS b) {
 }
 
 void Game::start(unsigned seed, bool first) {
+  color = NO, last1 = NO, last2 = NO;
   available = !first;
   round = 0;
   timeOver = 0;
