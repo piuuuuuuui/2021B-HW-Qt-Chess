@@ -201,7 +201,6 @@ void Game::focusOn(int f) {
         last1 = grids[f].getColor();
       }
     }
-    if (available) timeOver = 0;
     updateRound();
     return;
   }
@@ -229,7 +228,6 @@ void Game::moveFromTo(int f, int t) {
     setStatus(t, EMPTY);
   else
     setStatus(t, fs);
-  if (available) timeOver = 0;
   updateRound();
 
   // post-check
