@@ -148,6 +148,15 @@ void Chess::setClient() {
   ui.actionCreate_the_connection->setEnabled(false);
   ui.actionConnect_to_server->setEnabled(false);
   ui.actionDisconnect->setEnabled(true);
+  if (!tcpSocket->waitForConnected(5000)) {
+    QDialog *warning = new QDialog(this);
+    warning->setModal(true);
+    warning->setWindowTitle("Timeout");
+    warning->setFixedSize(161, 40);
+    QLabel *info = new QLabel("Connection failed", warning);
+    info->setGeometry(10, 10, 141, 20);
+    warning->exec();
+  }
 }
 
 void Chess::disconnect() {

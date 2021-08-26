@@ -158,6 +158,16 @@ void Game::mousePressEvent(QMouseEvent *event) {
   }
 }
 
+void Game::setStatus(int i, STATUS s) {
+  grids[i].stat = s;
+  if (s == EMPTY) {
+    pieces[i]->hide();
+  } else {
+    pieces[i]->setPixmap(pics[s]);
+    pieces[i]->show();
+  }
+}
+
 void Game::updateRound() {
   qDebug() << "Round" << ++round;
   if (round == 20) emit enableResign(true);
@@ -175,16 +185,6 @@ void Game::updateRound() {
   } else if (timer) {
     timer->setGeometry(70, 160, 300, 10);
     timer->start(1 - color);
-  }
-}
-
-void Game::setStatus(int i, STATUS s) {
-  grids[i].stat = s;
-  if (s == EMPTY) {
-    pieces[i]->hide();
-  } else {
-    pieces[i]->setPixmap(pics[s]);
-    pieces[i]->show();
   }
 }
 
