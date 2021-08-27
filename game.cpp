@@ -179,8 +179,13 @@ void Game::updateRound() {
       timer->start(color);
     }
     for (auto grid : grids)
-      if (grid.stat == UNKNOWN || grid.getColor() == color && grid.stat < RM)
+      if (grid.stat == UNKNOWN)
         return;
+    for (int i = 0; i < 60; i++)
+      if (grids[i].getColor() == color && grids[i].stat < RM)
+        for (int j = 0; j < 60; j++)
+          if (isReachable(i, j) && isAttackable(grids[i].stat, grids[j].stat))
+            return;
     lose();
   } else if (timer) {
     timer->setGeometry(70, 160, 300, 10);
