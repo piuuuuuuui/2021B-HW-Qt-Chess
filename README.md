@@ -43,5 +43,3 @@ Visual Studio 2019 + Qt 6.1.2 (MSVC 2019 64-bit)
 游戏过程中，双方界面都显示进度条，标示当前下棋方、玩家阵营（颜色）及剩余时间。
 
 游戏结束时弹窗告知双方胜负结果。
-
-<img src="https://i.loli.net/2021/08/28/IH6vPMLha7DmXg9.jpg" alt="chess.JPG" style="zoom:50%;" />
