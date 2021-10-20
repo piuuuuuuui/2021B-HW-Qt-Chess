@@ -1,4 +1,4 @@
-# 2021B-HW-Qt-Chess
+# Qt-Chess
 
 Qt 大作业军旗对战
 
